@@ -790,5 +790,35 @@
             if (list) list.innerHTML = events.length ? events.map(e => `<div class="p-4 bg-white/50 rounded-2xl border t-border cursor-pointer transition-shadow hover:shadow-sm" onclick="showExhDetail('${e.id}')">${e.name}</div>`).join('') : '<p class="text-xs t-text-light text-center py-4">本日無紀錄</p>';
         }
     </script>
+
+<script>
+  async function loadDataFromNotion() {
+    try {
+      // 1. 呼叫我們自己的 API
+      const response = await fetch('/api/getNotionData');
+      const data = await response.json();
+      
+      console.log("原始資料：", data);
+
+      // 2. 假設你的 Notion 資料庫有一個欄位叫做「名稱」(Name)
+      // Notion 的資料結構很長，通常要這樣抽出來：
+      data.forEach(item => {
+        // 取得單筆資料的名稱
+        const title = item.properties['名稱'].title[0].plain_text;
+        console.log("讀取到項目：", title);
+        
+        // 這裡可以結合你原本的介面邏輯
+        // 例如：把抓到的標題，動態產生 <div> 放進你的展覽或美食區塊中
+      });
+      
+    } catch (error) {
+      console.error("讀取失敗，請檢查網路或 API 設定：", error);
+    }
+  }
+
+  // 網頁載入時執行
+  window.onload = loadDataFromNotion;
+</script>
+
 </body>
 </html>
