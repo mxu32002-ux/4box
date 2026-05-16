@@ -88,12 +88,45 @@
         <header class="mb-10 text-center">
             <h1 class="text-3xl font-bold tracking-widest t-primary-text mb-6">SJ百寶任意門</h1>
             <div class="inline-flex t-card rounded-full p-1 border t-border overflow-x-auto no-scrollbar max-w-full">
+                <button id="tab-cover" class="whitespace-nowrap px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 t-text-light hover:t-text" onclick="switchMainTab('cover')">封面</button>
                 <button id="tab-exh" class="whitespace-nowrap px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 t-text-light hover:t-text" onclick="switchMainTab('exh')">展覽</button>
                 <button id="tab-spot" class="whitespace-nowrap px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 t-text-light hover:t-text" onclick="switchMainTab('spot')">景點</button>
                 <button id="tab-food" class="whitespace-nowrap px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 t-text-light hover:t-text" onclick="switchMainTab('food')">美食</button>
                 <button id="tab-store" class="whitespace-nowrap px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 t-text-light hover:t-text" onclick="switchMainTab('store')">店家</button>
             </div>
         </header>
+
+        <!-- ==================== 0. 封面區塊 (Cover) ==================== -->
+        <div id="section-cover" class="hidden">
+            <div class="text-center py-8 md:py-16 animate-in fade-in duration-700">
+                <div class="inline-block p-4 rounded-full t-card mb-6 shadow-sm border t-border">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 t-primary-text">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z" />
+                    </svg>
+                </div>
+                <h2 class="text-3xl md:text-4xl font-bold font-serif t-primary-text mb-4 tracking-widest">歡迎開啟任意門</h2>
+                <p class="t-text-light mb-12 text-sm md:text-base tracking-wide">專屬於您的生活與品味紀錄庫</p>
+                
+                <div class="grid grid-cols-2 gap-4 md:gap-6 max-w-lg mx-auto">
+                    <div class="t-card rounded-3xl p-6 border t-border cursor-pointer hover:-translate-y-1 transition-transform shadow-sm flex flex-col items-center" onclick="switchMainTab('exh')">
+                        <div class="text-4xl font-bold t-primary-text mb-2 font-serif" id="cover-count-exh">0</div>
+                        <div class="text-sm t-text-light font-medium tracking-widest">展覽紀錄</div>
+                    </div>
+                    <div class="t-card rounded-3xl p-6 border t-border cursor-pointer hover:-translate-y-1 transition-transform shadow-sm flex flex-col items-center" onclick="switchMainTab('spot')">
+                        <div class="text-4xl font-bold t-primary-text mb-2 font-serif" id="cover-count-spot">0</div>
+                        <div class="text-sm t-text-light font-medium tracking-widest">景點紀錄</div>
+                    </div>
+                    <div class="t-card rounded-3xl p-6 border t-border cursor-pointer hover:-translate-y-1 transition-transform shadow-sm flex flex-col items-center" onclick="switchMainTab('food')">
+                        <div class="text-4xl font-bold t-primary-text mb-2 font-serif" id="cover-count-food">0</div>
+                        <div class="text-sm t-text-light font-medium tracking-widest">美食紀錄</div>
+                    </div>
+                    <div class="t-card rounded-3xl p-6 border t-border cursor-pointer hover:-translate-y-1 transition-transform shadow-sm flex flex-col items-center" onclick="switchMainTab('store')">
+                        <div class="text-4xl font-bold t-primary-text mb-2 font-serif" id="cover-count-store">0</div>
+                        <div class="text-sm t-text-light font-medium tracking-widest">店家紀錄</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- ==================== 1. 展覽區塊 (Exhibitions) ==================== -->
         <div id="section-exh" class="hidden">
@@ -190,7 +223,7 @@
         let foods = JSON.parse(localStorage.getItem('foods')) || [];
         let stores = JSON.parse(localStorage.getItem('stores')) || []; 
         
-        let currentTab = 'exh';
+        let currentTab = 'cover';
         let spotSortType = 'default';
         let foodSortType = 'default';
         let storeSortType = 'default';
@@ -210,13 +243,13 @@
         const foodCategories = ['日式','中式','東南亞','港式','義式','火鍋','燒烤','其他'];
 
         window.onload = () => {
-            switchMainTab('exh');
+            switchMainTab('cover');
         };
 
         function switchMainTab(tab) {
             currentTab = tab;
             document.body.className = `t-bg min-h-screen t-text ${tab === 'spot' ? 'theme-spot' : tab === 'food' ? 'theme-food' : tab === 'store' ? 'theme-store' : ''}`;
-            ['exh', 'spot', 'food', 'store'].forEach(t => {
+            ['cover', 'exh', 'spot', 'food', 'store'].forEach(t => {
                 const section = document.getElementById(`section-${t}`);
                 if (section) section.classList.add('hidden');
                 const btn = document.getElementById(`tab-${t}`);
@@ -227,13 +260,22 @@
             const activeBtn = document.getElementById(`tab-${tab}`);
             if (activeBtn) activeBtn.className = "whitespace-nowrap px-6 py-2 rounded-full text-sm font-medium transition-all duration-300 t-primary shadow-sm";
             
-            if (tab === 'exh') switchExhView('list');
+            if (tab === 'cover') renderCover();
+            else if (tab === 'exh') switchExhView('list');
             else if (tab === 'spot') switchSpotView('list');
             else if (tab === 'food') switchFoodView('list');
             else if (tab === 'store') switchStoreView('list');
         }
 
-        // --- 1. 展覽邏輯 ---
+        // --- 0. 封面邏輯 ---
+        function renderCover() {
+            if(document.getElementById('cover-count-exh')) document.getElementById('cover-count-exh').innerText = exhibitions.length;
+            if(document.getElementById('cover-count-spot')) document.getElementById('cover-count-spot').innerText = spots.length;
+            if(document.getElementById('cover-count-food')) document.getElementById('cover-count-food').innerText = foods.length;
+            if(document.getElementById('cover-count-store')) document.getElementById('cover-count-store').innerText = stores.length;
+        }
+
+        // --- 1. 展覽邏輯 (維持不變) ---
         function switchExhView(view) {
             document.getElementById('exh-list-view').classList.toggle('hidden', view !== 'list');
             document.getElementById('exh-calendar-view').classList.toggle('hidden', view !== 'calendar');
@@ -790,35 +832,5 @@
             if (list) list.innerHTML = events.length ? events.map(e => `<div class="p-4 bg-white/50 rounded-2xl border t-border cursor-pointer transition-shadow hover:shadow-sm" onclick="showExhDetail('${e.id}')">${e.name}</div>`).join('') : '<p class="text-xs t-text-light text-center py-4">本日無紀錄</p>';
         }
     </script>
-
-<script>
-  async function loadDataFromNotion() {
-    try {
-      // 1. 呼叫我們自己的 API
-      const response = await fetch('/api/getNotionData');
-      const data = await response.json();
-      
-      console.log("原始資料：", data);
-
-      // 2. 假設你的 Notion 資料庫有一個欄位叫做「名稱」(Name)
-      // Notion 的資料結構很長，通常要這樣抽出來：
-      data.forEach(item => {
-        // 取得單筆資料的名稱
-        const title = item.properties['名稱'].title[0].plain_text;
-        console.log("讀取到項目：", title);
-        
-        // 這裡可以結合你原本的介面邏輯
-        // 例如：把抓到的標題，動態產生 <div> 放進你的展覽或美食區塊中
-      });
-      
-    } catch (error) {
-      console.error("讀取失敗，請檢查網路或 API 設定：", error);
-    }
-  }
-
-  // 網頁載入時執行
-  window.onload = loadDataFromNotion;
-</script>
-
 </body>
 </html>
