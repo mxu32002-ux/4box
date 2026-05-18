@@ -1,7 +1,7 @@
 {
   "name": "sj-lifelog-backend",
   "version": "1.0.0",
-  "description": "SJ百寶任意門 Web App 後端中繼站",
+  "description": "SJ lifelog backend",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -13,7 +13,5 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  },
-  "author": "SJ",
-  "license": "ISC"
+  }
 }
