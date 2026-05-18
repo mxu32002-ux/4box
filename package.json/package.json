@@ -7,9 +7,9 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "@notionhq/client": "^2.3.5",
-    "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "@notionhq/client": "latest",
+    "cors": "latest",
+    "express": "latest"
   },
   "engines": {
     "node": ">=18.0.0"
