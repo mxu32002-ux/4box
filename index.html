@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<!-- ================= 網頁 Icon & 手機 App 圖示設定 ================= -->
+<!-- 1. 標準電腦瀏覽器分頁圖示 -->
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+
+<!-- 2. Apple iOS (iPhone/iPad) 加到主畫面圖示 -->
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+
+<!-- 3. Android (Chrome) 與一般 PWA 應用的圖示 -->
+<link rel="icon" type="image/png" sizes="512x512" href="android-chrome-512x512.png">
+
+<!-- 4. 設定 iOS 手機頂部狀態列的顏色 (讓網頁跟手機系統完美融合) -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>生活足跡隨身手記</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Noto Serif TC & Lora -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400..700;1,400..700&family=Noto+Serif+TC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Tailwind Custom Config for Aesthetic Literary Theme -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        diary: {
+                            bg: '#f8f6f0',       // 燕麥奶暖白底色
+                            card: '#ffffff',     // 純白卡片
+                            primary: '#5c6e58',  // 溫潤鼠尾草綠
+                            secondary: '#c97a7a',// 復古煙粉/暖磚紅
+                            accent: '#d2a477',   // 暖色溫木質調
+                            text: '#3c3836',     // 深炭灰
+                            light: '#e8e5dc',    // 柔軟米灰
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Noto Serif TC', 'Georgia', 'serif'],
+                        sans: ['Lora', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        soft: '0 8px 30px rgb(92, 110, 88, 0.04)',
+                        floating: '0 12px 40px rgb(60, 56, 54, 0.12)',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Lora', 'Noto Serif TC', Georgia, serif;
+            background-color: #efede6;
+            color: #3c3836;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 隱藏滾動條但保持滾動功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* 細緻的手帳虛線 */
+        .dashed-border {
+            background-image: linear-gradient(to right, #e8e5dc 50%, rgba(255, 255, 255, 0) 0%);
+            background-position: bottom;
+            background-size: 8px 1px;
+            background-repeat: repeat-x;
+            height: 1px;
+        }
+
+        /* 動畫過渡 */
+        .modal-overlay {
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .modal-content {
+            transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.1), opacity 0.35s ease;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-center min-h-screen">
+
+    <!-- APP 模式模擬框架 (在桌面上限制寬度，在手機上全螢幕) -->
+    <div class="w-full max-w-md h-screen bg-diary-bg relative flex flex-col shadow-floating overflow-hidden sm:rounded-[36px] sm:h-[850px] border border-stone-200/40">
+        
+        <!-- 頂部精緻 Header -->
+        <header class="pt-7 pb-4 px-6 bg-diary-bg shrink-0">
+            <div class="flex justify-between items-center mb-4">
+                <div>
+                    <span class="text-xs font-sans tracking-widest text-diary-accent font-bold uppercase">Our Footprints</span>
+                    <h1 class="text-2xl font-serif font-black text-diary-text mt-0.5">生活足跡手札</h1>
+                </div>
+                <div class="w-10 h-10 rounded-full bg-diary-card flex items-center justify-center text-diary-primary border border-diary-light/60 shadow-soft">
+                    <i class="fa-solid fa-feather-pointed"></i>
+                </div>
+            </div>
+
+            <!-- 搜尋與排序欄 -->
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none text-stone-400 text-sm">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="searchInput" oninput="handleSearch()" placeholder="搜尋記憶、地點或備註..." 
+                           class="w-full pl-9 pr-4 py-2.5 bg-diary-card border border-diary-light/80 rounded-2xl text-xs font-serif focus:outline-none focus:border-diary-primary/60 placeholder-stone-400 shadow-soft transition-colors">
+                </div>
+                <div class="relative shrink-0">
+                    <select id="sortSelect" onchange="handleSortChange()" 
+                            class="h-10 pl-3 pr-8 bg-diary-card border border-diary-light/80 rounded-2xl text-[11px] font-serif font-bold text-diary-text/70 focus:outline-none focus:border-diary-primary/60 shadow-soft appearance-none transition-all cursor-pointer">
+                        <option value="newest">最新</option>
+                        <option value="oldest">最舊</option>
+                        <option value="region">依地區</option>
+                        <option value="category">分類</option>
+                    </select>
+                    <i class="fa-solid fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-[9px]"></i>
+                </div>
+            </div>
+        </header>
+
+        <!-- 手札內容列表滾動區 -->
+        <main class="flex-1 overflow-y-auto px-6 pb-28 no-scrollbar" id="itemsList">
+            <!-- 動態生成的小卡片將放置在此 -->
+        </main>
+
+        <!-- 右下角懸浮新增按鈕 (FAB) -->
+        <button onclick="openEditModal()" class="fixed sm:absolute bottom-24 right-6 w-14 h-14 bg-diary-primary text-white rounded-full flex items-center justify-center shadow-floating hover:scale-105 active:scale-95 transition-all z-40">
+            <i class="fa-solid fa-plus text-xl"></i>
+        </button>
+
+        <!-- 底部 APP 模式分類導覽列 -->
+        <nav class="absolute bottom-0 left-0 right-0 h-20 bg-diary-card border-t border-diary-light/50 flex justify-around items-center px-4 z-40 shadow-floating sm:rounded-b-[36px]">
+            <button onclick="changeCategoryFilter('All')" class="nav-item flex flex-col items-center gap-1 text-diary-primary" id="nav-All">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all"><i class="fa-solid fa-seedling"></i></div>
+                <span class="text-[10px] font-serif font-bold tracking-wider">全部</span>
+            </button>
+            <button onclick="changeCategoryFilter('展覽')" class="nav-item flex flex-col items-center gap-1 text-stone-400" id="nav-展覽">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all"><i class="fa-solid fa-palette"></i></div>
+                <span class="text-[10px] font-serif font-bold tracking-wider">展覽</span>
+            </button>
+            <button onclick="changeCategoryFilter('景點')" class="nav-item flex flex-col items-center gap-1 text-stone-400" id="nav-景點">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all"><i class="fa-solid fa-mountain-sun"></i></div>
+                <span class="text-[10px] font-serif font-bold tracking-wider">景點</span>
+            </button>
+            <button onclick="changeCategoryFilter('美食')" class="nav-item flex flex-col items-center gap-1 text-stone-400" id="nav-美食">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all"><i class="fa-solid fa-utensils"></i></div>
+                <span class="text-[10px] font-serif font-bold tracking-wider">美食</span>
+            </button>
+            <button onclick="changeCategoryFilter('店家')" class="nav-item flex flex-col items-center gap-1 text-stone-400" id="nav-店家">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-lg transition-all"><i class="fa-solid fa-store"></i></div>
+                <span class="text-[10px] font-serif font-bold tracking-wider">店家</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- 1. 下一層詳細手記 Modal -->
+    <div id="detailModal" class="fixed inset-0 z-50 flex justify-center items-end sm:items-center hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm modal-overlay opacity-0" onclick="closeDetailModal()"></div>
+        
+        <!-- Drawer Content -->
+        <div class="bg-diary-bg w-full max-w-md h-[80vh] sm:h-auto sm:max-h-[85vh] rounded-t-[32px] sm:rounded-[32px] shadow-floating relative z-10 flex flex-col modal-content translate-y-full sm:translate-y-10 sm:opacity-0 overflow-hidden">
+            
+            <!-- Mobile Swipe Indicator -->
+            <div class="w-full flex justify-center pt-3 pb-1 sm:hidden cursor-pointer" onclick="closeDetailModal()">
+                <div class="w-12 h-1.5 bg-diary-light rounded-full"></div>
+            </div>
+
+            <!-- Compact Header (已移除贅餘空白) -->
+            <div class="px-6 py-4 border-b border-diary-light/60 flex justify-between items-center shrink-0 bg-white shadow-soft">
+                <div class="flex items-center gap-3">
+                    <div id="detailCategoryIcon" class="w-10 h-10 bg-diary-primary/10 rounded-xl flex items-center justify-center text-lg text-diary-primary border border-diary-primary/20">
+                        <!-- Icon Injected by JS -->
+                    </div>
+                    <div>
+                        <span id="detailCategoryTag" class="text-[10px] font-serif font-bold text-diary-secondary tracking-widest uppercase block mb-0.5"></span>
+                        <h2 id="detailTitle" class="text-base font-serif font-bold text-diary-text leading-snug line-clamp-1"></h2>
+                    </div>
+                </div>
+                <button onclick="closeDetailModal()" class="w-8 h-8 rounded-full bg-diary-bg flex items-center justify-center text-diary-text/60 hover:bg-diary-light transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Scrollable Content -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-5 no-scrollbar" id="detailDynamicContent">
+                <!-- Template Injected by JS based on Category -->
+            </div>
+
+            <!-- Bottom Operation Action Panel -->
+            <div class="p-5 border-t border-diary-light/60 bg-white flex justify-between gap-3 shrink-0 rounded-b-[32px]">
+                <button id="detailDeleteBtn" class="flex-1 py-3 bg-red-50 hover:bg-red-100 text-diary-secondary font-serif text-sm font-bold rounded-2xl border border-red-100 transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash-can"></i> 撕去此頁
+                </button>
+                <button id="detailEditBtn" class="flex-1 py-3 bg-diary-primary hover:bg-diary-primary/90 text-white font-serif text-sm font-bold rounded-2xl shadow-soft transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-pen-fancy"></i> 編修此章
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. 新增與編修手記 Modal -->
+    <div id="editModal" class="fixed inset-0 z-50 flex justify-center items-end sm:items-center hidden">
+        <!-- Backdrop -->
+        <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm modal-overlay opacity-0" onclick="closeEditModal()"></div>
+        
+        <!-- Form Content -->
+        <div class="bg-diary-bg w-full max-w-md h-[88vh] sm:h-auto sm:max-h-[90vh] rounded-t-[32px] sm:rounded-[32px] shadow-floating relative z-10 flex flex-col modal-content translate-y-full sm:translate-y-10 sm:opacity-0 overflow-hidden">
+            
+            <div class="w-full flex justify-center pt-3 pb-1 sm:hidden cursor-pointer" onclick="closeEditModal()">
+                <div class="w-12 h-1.5 bg-diary-light rounded-full"></div>
+            </div>
+
+            <!-- Header -->
+            <div class="px-6 py-4 border-b border-diary-light/60 flex justify-between items-center bg-white shadow-soft shrink-0">
+                <h2 id="modalTitle" class="text-lg font-serif font-black text-diary-text">撰寫新手記</h2>
+                <button onclick="closeEditModal()" class="w-8 h-8 rounded-full bg-diary-bg flex items-center justify-center text-diary-text/60 hover:bg-diary-light transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Form Fields -->
+            <div class="flex-1 overflow-y-auto p-6 space-y-5 no-scrollbar">
+                <input type="hidden" id="itemId">
+
+                <!-- 名稱 (Title) -->
+                <div>
+                    <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5 ml-1">名稱 / 標題</label>
+                    <input type="text" id="itemTitle" placeholder="如：塩埕珈琲館、印象派大師展" 
+                           class="w-full border border-diary-light bg-white rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-diary-primary focus:ring-1 focus:ring-diary-primary transition-colors">
+                </div>
+
+                <!-- 分頁 (Category Select) -->
+                <div>
+                    <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5 ml-1">分類手帳</label>
+                    <div class="relative">
+                        <select id="itemCategory" onchange="updateFormFieldsVisibility()" 
+                                class="w-full border border-diary-light bg-white rounded-2xl px-4 py-3 text-sm appearance-none focus:outline-none focus:border-diary-primary transition-colors">
+                            <option value="展覽">展覽</option>
+                            <option value="景點">景點</option>
+                            <option value="美食">美食</option>
+                            <option value="店家">店家</option>
+                        </select>
+                        <i class="fa-solid fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-xs"></i>
+                    </div>
+                </div>
+
+                <!-- 展覽 (Exhibition) 專屬欄位組 -->
+                <div id="exhibitionFields" class="space-y-4 hidden bg-white/60 p-4 rounded-2xl border border-diary-light/60">
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地區</label>
+                        <div class="relative">
+                            <select id="exhibitionRegion" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="台北">台北</option>
+                                <option value="新北">新北</option>
+                                <option value="高雄">高雄</option>
+                                <option value="台南">台南</option>
+                                <option value="屏東">屏東</option>
+                                <option value="嘉義">嘉義</option>
+                                <option value="台中">台中</option>
+                                <option value="基隆">基隆</option>
+                                <option value="桃園">桃園</option>
+                                <option value="新竹">新竹</option>
+                                <option value="苗栗">苗栗</option>
+                                <option value="彰化">彰化</option>
+                                <option value="南投">南投</option>
+                                <option value="雲林">雲林</option>
+                                <option value="宜蘭">宜蘭</option>
+                                <option value="花蓮">花蓮</option>
+                                <option value="台東">台東</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地點</label>
+                        <input type="text" id="exhibitionLocation" placeholder="如：台北市立美術館" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地址</label>
+                        <input type="text" id="exhibitionAddress" placeholder="如：台北市中山區中山北路三段181號" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">開始日期</label>
+                            <input type="date" id="exhibitionStartDate" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">結束日期</label>
+                            <input type="date" id="exhibitionEndDate" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">營業時間</label>
+                        <input type="text" id="exhibitionTime" placeholder="如：09:30 - 17:30 (週一休館)" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">門票</label>
+                        <input type="text" id="exhibitionTicket" placeholder="如：全票 150 元 / 優待票 100 元" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">影片</label>
+                        <input type="url" id="exhibitionVideo" placeholder="選填影片連結 (YouTube/Vimeo)" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">備註</label>
+                        <textarea id="exhibitionNotes" rows="3" placeholder="留下您的感想或看展備忘錄..." class="w-full border border-diary-light bg-white rounded-xl p-3.5 text-xs focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- 景點 (Attraction) 專屬欄位組 -->
+                <div id="attractionFields" class="space-y-4 hidden bg-white/60 p-4 rounded-2xl border border-diary-light/60">
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地區</label>
+                        <div class="relative">
+                            <select id="attractionRegion" onchange="handleAttractionRegionChange()" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="基隆">基隆</option>
+                                <option value="台北">台北</option>
+                                <option value="新北">新北</option>
+                                <option value="桃園">桃園</option>
+                                <option value="新竹">新竹</option>
+                                <option value="苗栗">苗栗</option>
+                                <option value="彰化">彰化</option>
+                                <option value="台中">台中</option>
+                                <option value="南投">南投</option>
+                                <option value="雲林">雲林</option>
+                                <option value="嘉義">嘉義</option>
+                                <option value="台南">台南</option>
+                                <option value="高雄">高雄</option>
+                                <option value="屏東">屏東</option>
+                                <option value="台東">台東</option>
+                                <option value="花蓮">花蓮</option>
+                                <option value="宜蘭">宜蘭</option>
+                                <option value="澎湖">澎湖</option>
+                                <option value="金門">金門</option>
+                                <option value="國外">國外</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <!-- 國外延伸選單 -->
+                    <div id="attractionForeignContainer" class="hidden">
+                        <label class="block text-xs font-serif font-bold text-diary-accent mb-1.5">國外細分地區</label>
+                        <div class="relative">
+                            <select id="attractionRegionForeign" class="w-full border border-diary-accent/40 bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="日本">日本</option>
+                                <option value="港澳">港澳</option>
+                                <option value="新加坡">新加坡</option>
+                                <option value="馬來西亞">馬來西亞</option>
+                                <option value="其他">其他</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-diary-accent pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地址</label>
+                        <input type="text" id="attractionAddress" placeholder="輸入地址一鍵生成地圖" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">營業時間</label>
+                        <input type="text" id="attractionTime" placeholder="如：24小時開放、08:00 - 17:00" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">門票</label>
+                        <input type="text" id="attractionTicket" placeholder="如：免費 / 入園費 200 元" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">影片</label>
+                        <input type="url" id="attractionVideo" placeholder="可貼上影片宣傳連結" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">備註</label>
+                        <textarea id="attractionNotes" rows="3" placeholder="寫些關於此地的小回憶或旅人指引..." class="w-full border border-diary-light bg-white rounded-xl p-3.5 text-xs focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- 美食 (Food) 專屬欄位組 -->
+                <div id="foodFields" class="space-y-4 hidden bg-white/60 p-4 rounded-2xl border border-diary-light/60">
+                    <!-- 美食 總類下拉選單 -->
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">總類</label>
+                        <div class="relative">
+                            <select id="foodType" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="日式">日式</option>
+                                <option value="中式">中式</option>
+                                <option value="港式">港式</option>
+                                <option value="星馬泰">星馬泰</option>
+                                <option value="火鍋">火鍋</option>
+                                <option value="燒烤">燒烤</option>
+                                <option value="其他">其他</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地區</label>
+                        <div class="relative">
+                            <select id="foodRegion" onchange="handleFoodRegionChange()" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="高雄">高雄</option>
+                                <option value="台南">台南</option>
+                                <option value="台北">台北</option>
+                                <option value="新北">新北</option>
+                                <option value="台中">台中</option>
+                                <option value="屏東">屏東</option>
+                                <option value="台東">台東</option>
+                                <option value="南投">南投</option>
+                                <option value="嘉義">嘉義</option>
+                                <option value="基隆">基隆</option>
+                                <option value="桃園">桃園</option>
+                                <option value="新竹">新竹</option>
+                                <option value="苗栗">苗栗</option>
+                                <option value="彰化">彰化</option>
+                                <option value="雲林">雲林</option>
+                                <option value="花蓮">花蓮</option>
+                                <option value="宜蘭">宜蘭</option>
+                                <option value="其他">其他</option>
+                                <option value="國外">國外</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <!-- 高雄行政區延伸選單 -->
+                    <div id="foodKaohsiungContainer" class="hidden">
+                        <label class="block text-xs font-serif font-bold text-diary-primary mb-1.5">高雄市行政區</label>
+                        <div class="relative">
+                            <select id="foodRegionKaohsiung" class="w-full border border-diary-primary/40 bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="鹽埕區">鹽埕區</option>
+                                <option value="鼓山區">鼓山區</option>
+                                <option value="左營區">左營區</option>
+                                <option value="楠梓區">楠梓區</option>
+                                <option value="三民區">三民區</option>
+                                <option value="新興區">新興區</option>
+                                <option value="前金區">前金區</option>
+                                <option value="苓雅區">苓雅區</option>
+                                <option value="前鎮區">前鎮區</option>
+                                <option value="旗津區">旗津區</option>
+                                <option value="小港區">小港區</option>
+                                <option value="鳳山區">鳳山區</option>
+                                <option value="其他">其他</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-diary-primary pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <!-- 美食國外延伸選單 -->
+                    <div id="foodForeignContainer" class="hidden">
+                        <label class="block text-xs font-serif font-bold text-diary-accent mb-1.5">國外細分地區</label>
+                        <div class="relative">
+                            <select id="foodRegionForeign" class="w-full border border-diary-accent/40 bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="日本">日本</option>
+                                <option value="港澳">港澳</option>
+                                <option value="新加坡">新加坡</option>
+                                <option value="馬來西亞">馬來西亞</option>
+                                <option value="其他">其他</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-diary-accent pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地址</label>
+                        <input type="text" id="foodAddress" placeholder="如：高雄市鹽埕區五福四路" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">營業時間</label>
+                        <input type="text" id="foodTime" placeholder="如：11:30 - 21:00" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">公休日</label>
+                        <input type="text" id="foodClosed" placeholder="如：每週二公休" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">影片</label>
+                        <input type="url" id="foodVideo" placeholder="美食短片或食記影片 YouTube 連結" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">備註</label>
+                        <textarea id="foodNotes" rows="3" placeholder="簡單記下美味評語或招牌推薦料理..." class="w-full border border-diary-light bg-white rounded-xl p-3.5 text-xs focus:outline-none"></textarea>
+                    </div>
+                </div>
+
+                <!-- 店家 (Store) / 其他 專屬通用欄位組 -->
+                <div id="defaultFields" class="space-y-4 hidden bg-white/60 p-4 rounded-2xl border border-diary-light/60">
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5 animate-pulse">地區</label>
+                        <div class="relative">
+                            <select id="itemRegion" onchange="handleStoreRegionChange()" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="台北">台北</option>
+                                <option value="新北">新北</option>
+                                <option value="高雄">高雄</option>
+                                <option value="台南">台南</option>
+                                <option value="屏東">屏東</option>
+                                <option value="嘉義">嘉義</option>
+                                <option value="台中">台中</option>
+                                <option value="基隆">基隆</option>
+                                <option value="桃園">桃園</option>
+                                <option value="新竹">新竹</option>
+                                <option value="苗栗">苗栗</option>
+                                <option value="彰化">彰化</option>
+                                <option value="南投">南投</option>
+                                <option value="雲林">雲林</option>
+                                <option value="宜蘭">宜蘭</option>
+                                <option value="花蓮">花蓮</option>
+                                <option value="台東">台東</option>
+                                <option value="其他">其他</option>
+                                <option value="國外">國外</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <!-- 店家 國外延伸選單 -->
+                    <div id="storeForeignContainer" class="hidden">
+                        <label class="block text-xs font-serif font-bold text-diary-accent mb-1.5">國外細分地區</label>
+                        <div class="relative">
+                            <select id="itemRegionForeign" class="w-full border border-diary-accent/40 bg-white rounded-xl px-3.5 py-2.5 text-xs appearance-none">
+                                <option value="日本">日本</option>
+                                <option value="港澳">港澳</option>
+                                <option value="新加坡">新加坡</option>
+                                <option value="馬來西亞">馬來西亞</option>
+                                <option value="其他">其他</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-diary-accent pointer-events-none text-xs"></i>
+                        </div>
+                    </div>
+                    <!-- 新增地址欄位於地區下一列 -->
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">地址</label>
+                        <input type="text" id="storeAddress" placeholder="輸入地址一鍵生成地圖" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <!-- 探訪日期改為營業時間 -->
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">營業時間</label>
+                        <input type="text" id="storeTime" placeholder="如：11:00 - 21:00 (週一公休)" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <!-- 新增公休日欄位 -->
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">公休日</label>
+                        <input type="text" id="storeClosed" placeholder="如：每週一、二公休" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <!-- 參考網站/地址改為影片 -->
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">影片</label>
+                        <input type="url" id="storeVideo" placeholder="可貼上店家介紹或 VLOG 影片連結" class="w-full border border-diary-light bg-white rounded-xl px-3.5 py-2.5 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-serif font-bold text-diary-text/70 mb-1.5">備註</label>
+                        <textarea id="storeNotes" rows="3" placeholder="寫寫當天的心情札記、或店家特色..." class="w-full border border-diary-light bg-white rounded-xl p-3.5 text-xs focus:outline-none"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="p-5 border-t border-diary-light/60 bg-white flex justify-between gap-3 shrink-0 rounded-b-[32px]">
+                <button onclick="closeEditModal()" class="flex-1 py-3 bg-diary-bg hover:bg-diary-light/70 text-diary-text/70 font-serif text-sm font-bold rounded-2xl transition-colors">
+                    取消
+                </button>
+                <button onclick="saveItem()" class="flex-1 py-3 bg-diary-primary hover:bg-diary-primary/90 text-white font-serif text-sm font-bold rounded-2xl shadow-soft transition-colors flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-bookmark"></i> 妥善收藏
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 自訂確認刪除彈窗 Modal -->
+    <div id="deleteModal" class="fixed inset-0 z-[60] flex justify-center items-center hidden">
+        <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm modal-overlay opacity-0" onclick="closeDeleteModal()"></div>
+        <div class="bg-white w-[85%] max-w-xs rounded-3xl p-6 relative z-10 text-center shadow-floating modal-content translate-y-10 opacity-0 transition-all">
+            <div class="w-12 h-12 bg-red-50 text-diary-secondary rounded-full flex items-center justify-center text-lg mx-auto mb-4">
+                <i class="fa-solid fa-eraser"></i>
+            </div>
+            <h3 class="font-serif font-bold text-lg text-diary-text mb-2">撕去此頁手記？</h3>
+            <p class="text-xs text-stone-500 font-serif leading-relaxed mb-6">撕去後，這段生活足跡將無法復原。您確定要將這段回憶清除嗎？</p>
+            <div class="flex gap-2">
+                <button onclick="closeDeleteModal()" class="flex-1 py-2.5 bg-diary-bg hover:bg-diary-light/60 text-stone-600 font-serif text-xs font-bold rounded-xl transition-colors">
+                    留下回憶
+                </button>
+                <button onclick="executeDelete()" class="flex-1 py-2.5 bg-diary-secondary hover:bg-diary-secondary/90 text-white font-serif text-xs font-bold rounded-xl transition-colors">
+                    清除
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 精美 Toast 浮動提示 -->
+    <div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-stone-800/90 backdrop-blur-md text-white text-[11px] font-serif py-3 px-6 rounded-full shadow-floating opacity-0 translate-y-2 pointer-events-none transition-all duration-300 z-[100] flex items-center gap-2">
+        <i class="fa-solid fa-feather"></i> <span id="toastMsg">手記已存檔</span>
+    </div>
+
+    <script>
+        // --- 狀態宣告 (State) ---
+        let items = JSON.parse(localStorage.getItem('lifelog_items')) || [];
+        let currentFilter = 'All'; // 'All' | '展覽' | '景點' | '美食' | '店家'
+        let itemToDelete = null;   // 當前選取欲刪除項目之 ID
+        let currentSort = 'newest'; // 預設：最新最前 'newest' | 'oldest' | 'region'
+
+        // 分類對應圖示
+        const categoryIcons = {
+            '展覽': '<i class="fa-solid fa-palette"></i>',
+            '景點': '<i class="fa-solid fa-mountain-sun"></i>',
+            '美食': '<i class="fa-solid fa-utensils"></i>',
+            '店家': '<i class="fa-solid fa-store"></i>'
+        };
+
+        // --- Demo 資料初始化 ---
+        if (items.length === 0) {
+            items = [
+                {
+                    id: 'demo-1',
+                    title: '「奇美博物館」從拉斐爾到梵谷特展',
+                    category: '展覽',
+                    exhibitionRegion: '台南',
+                    exhibitionLocation: '奇美博物館特展廳',
+                    exhibitionAddress: '台南市仁德區文華路二段66號',
+                    exhibitionStartDate: '2026-05-02',
+                    exhibitionEndDate: '2026-09-01',
+                    exhibitionTime: '09:30 - 17:30 (每週三休館)',
+                    exhibitionTicket: '全票 550 元 / 優待票 450 元',
+                    exhibitionVideo: 'https://www.youtube.com/watch?v=example1',
+                    exhibitionNotes: '非常震撼的西洋大師名畫展！第一次在台灣看到波提切利與拉斐爾的原畫，色彩層次極其細膩，建議提早一個月預約場次。',
+                    timestamp: Date.now() - 50000
+                },
+                {
+                    id: 'demo-2',
+                    title: '阿里山眠月線舊鐵道探尋',
+                    category: '景點',
+                    attractionRegion: '嘉義',
+                    attractionRegionSub: '',
+                    attractionAddress: '嘉義縣阿里山鄉眠月線森林鐵道',
+                    attractionTime: '全天開放 (需事先申請入山)',
+                    attractionTicket: '免費 (需一葉蘭保留區許可證)',
+                    attractionVideo: 'https://www.youtube.com/watch?v=example2',
+                    attractionNotes: '舊鐵道與參天巨木交織的奇幻秘境，走在荒廢坍塌的明隧道上，有一種時間靜止的錯覺。霧氣飄來時如置身仙境！',
+                    timestamp: Date.now() - 100000
+                },
+                {
+                    id: 'demo-3',
+                    title: '日和手作珈琲 (鹽埕老鋪)',
+                    category: '美食',
+                    foodType: '其他',
+                    foodRegion: '高雄',
+                    foodRegionSub: '鹽埕區',
+                    foodAddress: '高雄市鹽埕區五福四路112號',
+                    foodTime: '11:00 - 19:00',
+                    foodClosed: '每週二、三公休',
+                    foodVideo: 'https://www.youtube.com/watch?v=example3',
+                    foodNotes: '手沖單品非常順口，店內放的黑膠唱片很有品味。肉桂捲外酥內軟，淋上焦糖醬堪稱完美，值得無數次回訪！',
+                    timestamp: Date.now() - 20000
+                },
+                {
+                    id: 'demo-4',
+                    title: '誠品生活 駁二店',
+                    category: '店家',
+                    storeRegion: '高雄',
+                    storeRegionSub: '',
+                    storeAddress: '高雄市鹽埕區大勇路3號 (C4倉庫)',
+                    storeTime: '11:00 - 21:00',
+                    storeVideo: 'https://www.youtube.com/watch?v=example4',
+                    storeNotes: '駁二非常放鬆的閱讀空間，紅磚與港灣相伴，選書極具設計與文藝感，適合散步後來沉澱心靈。',
+                    timestamp: Date.now()
+                }
+            ];
+            saveToLocal();
+        }
+
+        // --- 核心儲存功能 (Core Database Sync) ---
+        function saveToLocal() {
+            localStorage.setItem('lifelog_items', JSON.stringify(items));
+        }
+
+        // --- 篩選與搜尋重繪 (Filtering & Render) ---
+        function changeCategoryFilter(cat) {
+            currentFilter = cat;
+            
+            // 更新底部導覽高亮
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('text-diary-primary');
+                btn.classList.add('text-stone-400');
+            });
+            const activeNav = document.getElementById(`nav-${cat}`);
+            if (activeNav) {
+                activeNav.classList.remove('text-stone-400');
+                activeNav.classList.add('text-diary-primary');
+            }
+
+            renderItems();
+        }
+
+        function handleSearch() {
+            renderItems();
+        }
+
+        function handleSortChange() {
+            currentSort = document.getElementById('sortSelect').value;
+            
+            let toastMsg = "手札排序：最新";
+            if (currentSort === 'oldest') {
+                toastMsg = "手札排序：最舊";
+            } else if (currentSort === 'region') {
+                toastMsg = "手札排序：依地區排序";
+            } else if (currentSort === 'category') {
+                toastMsg = "手札排序：依分類排序";
+            }
+            
+            showToast(toastMsg);
+            renderItems();
+        }
+
+        // 智慧提取各種類別的地區資訊，方便統一排序
+        function getItemRegion(item) {
+            if (item.category === '展覽') {
+                return item.exhibitionRegion || '';
+            } else if (item.category === '景點') {
+                return (item.attractionRegion === '國外' && item.attractionRegionSub) ? item.attractionRegionSub : (item.attractionRegion || '');
+            } else if (item.category === '美食') {
+                return (item.foodRegion === '高雄' || item.foodRegion === '國外') && item.foodRegionSub ? item.foodRegionSub : (item.foodRegion || '');
+            } else {
+                return (item.storeRegion === '國外' && item.storeRegionSub) ? item.storeRegionSub : (item.storeRegion || '');
+            }
+        }
+
+        function renderItems() {
+            const container = document.getElementById('itemsList');
+            container.innerHTML = '';
+
+            const q = document.getElementById('searchInput').value.trim().toLowerCase();
+
+            // 1. 類別過濾
+            let filtered = items;
+            if (currentFilter !== 'All') {
+                filtered = items.filter(item => item.category === currentFilter);
+            }
+
+            // 3. 排序 (時間由新到舊、時間由舊到新、依地區中文排序、依分類手帳排序)
+            if (currentSort === 'newest') {
+                filtered.sort((a, b) => b.timestamp - a.timestamp);
+            } else if (currentSort === 'oldest') {
+                filtered.sort((a, b) => a.timestamp - b.timestamp);
+            } else if (currentSort === 'region') {
+                filtered.sort((a, b) => {
+                    const regA = getItemRegion(a);
+                    const regB = getItemRegion(b);
+                    // 使用繁體中文 localeCompare 進行地區排列
+                    return regA.localeCompare(regB, 'zh-Hant');
+                });
+            } else if (currentSort === 'category') {
+                const catOrder = { '展覽': 1, '景點': 2, '美食': 3, '店家': 4 };
+                filtered.sort((a, b) => {
+                    const orderA = catOrder[a.category] || 99;
+                    const orderB = catOrder[b.category] || 99;
+                    if (orderA !== orderB) {
+                        return orderA - orderB;
+                    }
+                    // 同類別時依時間最新排序
+                    return b.timestamp - a.timestamp;
+                });
+            }
+
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div class="flex flex-col items-center justify-center py-20 text-center">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-stone-300 border border-diary-light/40 mb-3 shadow-soft">
+                            <i class="fa-solid fa-wind text-xl"></i>
+                        </div>
+                        <h3 class="font-serif font-bold text-stone-400 text-sm">這兒還是一張白紙</h3>
+                        <p class="text-[11px] text-stone-400 font-serif mt-1">點擊右下角按鈕寫下新的足跡記憶</p>
+                    </div>
+                `;
+                return;
+            }
+
+            filtered.forEach(item => {
+                const card = createCardElement(item);
+                container.appendChild(card);
+            });
+        }
+
+        function createCardElement(item) {
+            const div = document.createElement('div');
+            div.className = "bg-diary-card rounded-3xl p-5 mb-4 border border-stone-200/50 shadow-soft cursor-pointer hover:shadow-floating transition-all duration-300 active:scale-[0.99] relative";
+            div.onclick = () => openDetailModal(item.id);
+
+            const iconHtml = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
+            
+            // 決定地區標籤內容 (用於卡片右上方)
+            let badgeText = '';
+            if (item.category === '展覽') {
+                badgeText = item.exhibitionRegion || '台北';
+            } else if (item.category === '景點') {
+                badgeText = item.attractionRegion === '國外' && item.attractionRegionSub ? item.attractionRegionSub : (item.attractionRegion || '台北');
+            } else if (item.category === '美食') {
+                badgeText = (item.foodRegion === '高雄' || item.foodRegion === '國外') && item.foodRegionSub ? `${item.foodRegion} • ${item.foodRegionSub}` : (item.foodRegion || '高雄');
+            } else {
+                badgeText = item.storeRegion === '國外' && item.storeRegionSub ? item.storeRegionSub : (item.storeRegion || '台北');
+            }
+
+            // 建立共同 Header 結構 (標籤在名稱上方，標題區pr-20防右上角地區標籤重疊)
+            let headerArea = `
+                <div class="flex items-start justify-between gap-2 mb-3 pr-20">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-1.5 mb-1.5">
+                            <span class="text-xs text-diary-primary/80">${iconHtml}</span>
+                            <span class="text-[10px] font-serif font-bold tracking-widest text-diary-accent uppercase">${item.category}</span>
+                        </div>
+                        <h3 class="font-serif font-bold text-base text-diary-text leading-snug hover:text-diary-primary transition-colors">${item.title}</h3>
+                    </div>
+                </div>
+                <!-- 右上方地區懸浮標籤 -->
+                <span class="absolute top-5 right-5 px-2.5 py-1 bg-diary-primary/10 text-diary-primary border border-diary-primary/20 text-[10px] font-serif font-bold rounded-lg tracking-wider flex items-center gap-1 shadow-soft">
+                    <i class="fa-solid fa-location-dot opacity-80 text-[9px]"></i>${badgeText}
+                </span>
+            `;
+
+            let bodyContent = '';
+
+            if (item.category === '展覽') {
+                bodyContent = `
+                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-stone-400 text-center"></i>地點：${item.exhibitionLocation || '-'}</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-calendar w-4 text-stone-400 text-center"></i>展覽：${item.exhibitionStartDate || '?'} ~ ${item.exhibitionEndDate || '?'}</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.exhibitionTime || '未註記'}</div>
+                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.exhibitionTicket || '免費'}</div>
+                    </div>
+                `;
+            } else if (item.category === '景點') {
+                bodyContent = `
+                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.attractionTime || '24小時開放'}</div>
+                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.attractionTicket || '免費'}</div>
+                    </div>
+                `;
+            } else if (item.category === '美食') {
+                bodyContent = `
+                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                        <div class="flex items-center gap-2"><i class="fa-solid fa-bowl-food w-4 text-stone-400 text-center"></i>總類：${item.foodType || '其他'}</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.foodTime || '無資料'}</div>
+                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.foodClosed || '無特別註記'}</div>
+                    </div>
+                `;
+            } else {
+                // 店家 (與美食/景點統一的文青乾淨卡片樣式，新增公休日顯示)
+                bodyContent = `
+                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.storeTime || '無資料'}</div>
+                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.storeClosed || '無特別註記'}</div>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = headerArea + bodyContent;
+            return div;
+        }
+
+        function openDetailModal(id) {
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+
+            document.getElementById('detailCategoryIcon').innerHTML = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
+            
+            // 標頭顯示
+            if (item.category === '美食' && item.foodType) {
+                document.getElementById('detailCategoryTag').textContent = `${item.category} • ${item.foodType}`;
+            } else {
+                document.getElementById('detailCategoryTag').textContent = item.category;
+            }
+            document.getElementById('detailTitle').textContent = item.title;
+
+            // 串接一鍵開啟 Google 地圖
+            const makeMapLink = (addr) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
+
+            const contentDiv = document.getElementById('detailDynamicContent');
+            contentDiv.innerHTML = '';
+
+            let detailHtml = '';
+
+            if (item.category === '展覽') {
+                detailHtml = `
+                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-location-dot text-diary-accent w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">地區 / 地點</span>
+                                <span class="font-bold text-sm text-diary-text">${item.exhibitionRegion} • ${item.exhibitionLocation || '-'}</span>
+                            </div>
+                        </div>
+                        ${item.exhibitionAddress ? `
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                                <a href="${makeMapLink(item.exhibitionAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                                    <span>${item.exhibitionAddress}</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                            </div>
+                        </div>` : ''}
+                        <div class="dashed-border my-2"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">開始日期</span>
+                                <span class="font-sans font-bold text-stone-700">${item.exhibitionStartDate || '無記載'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">結束日期</span>
+                                <span class="font-sans font-bold text-stone-700">${item.exhibitionEndDate || '無記載'}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                                <span class="font-bold text-stone-700">${item.exhibitionTime || '無資料'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">門票</span>
+                                <span class="font-bold text-diary-secondary">${item.exhibitionTicket || '免費'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${item.exhibitionVideo ? `
+                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                        </div>
+                        <a href="${item.exhibitionVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </a>
+                    </div>` : ''}
+
+                    ${item.exhibitionNotes ? `
+                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.exhibitionNotes}</p>
+                    </div>` : ''}
+                `;
+            } else if (item.category === '景點') {
+                let displayRegion = item.attractionRegion;
+                if (item.attractionRegion === '國外' && item.attractionRegionSub) {
+                    displayRegion += ` • ${item.attractionRegionSub}`;
+                }
+
+                detailHtml = `
+                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">景點地區</span>
+                                <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
+                            </div>
+                        </div>
+                        ${item.attractionAddress ? `
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                                <a href="${makeMapLink(item.attractionAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                                    <span>${item.attractionAddress}</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                            </div>
+                        </div>` : ''}
+                        <div class="dashed-border my-2"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                                <span class="font-bold text-stone-700">${item.attractionTime || '全天候開放'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">門票門檻</span>
+                                <span class="font-bold text-diary-secondary">${item.attractionTicket || '免費'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${item.attractionVideo ? `
+                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                        </div>
+                        <a href="${item.attractionVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </a>
+                    </div>` : ''}
+
+                    ${item.attractionNotes ? `
+                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.attractionNotes}</p>
+                    </div>` : ''}
+                `;
+            } else if (item.category === '美食') {
+                let displayRegion = item.foodRegion;
+                if (item.foodRegion === '高雄' && item.foodRegionSub) {
+                    displayRegion += ` • ${item.foodRegionSub}`;
+                } else if (item.foodRegion === '國外' && item.foodRegionSub) {
+                    displayRegion += ` • ${item.foodRegionSub}`;
+                }
+
+                detailHtml = `
+                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">美食地區</span>
+                                <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
+                            </div>
+                        </div>
+                        ${item.foodAddress ? `
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                                <a href="${makeMapLink(item.foodAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                                    <span>${item.foodAddress}</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                            </div>
+                        </div>` : ''}
+                        <div class="dashed-border my-2"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                                <span class="font-bold text-stone-700">${item.foodTime || '無資料'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">固定公休日</span>
+                                <span class="font-bold text-diary-secondary">${item.foodClosed || '無特別註記'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${item.foodVideo ? `
+                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                        </div>
+                        <a href="${item.foodVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </a>
+                    </div>` : ''}
+
+                    ${item.foodNotes ? `
+                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.foodNotes}</p>
+                    </div>` : ''}
+                `;
+            } else {
+                // 店家 / 專用詳細頁排版 (無喜愛程度，新增地址及營業時間)
+                let displayRegion = item.storeRegion || '台北';
+                if (item.storeRegion === '國外' && item.storeRegionSub) {
+                    displayRegion += ` • ${item.storeRegionSub}`;
+                }
+
+                detailHtml = `
+                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">店家地區</span>
+                                <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
+                            </div>
+                        </div>
+                        ${item.storeAddress ? `
+                        <div class="flex items-start gap-3">
+                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                                <a href="${makeMapLink(item.storeAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                                    <span>${item.storeAddress}</span>
+                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                                </a>
+                            </div>
+                        </div>` : ''}
+                        <div class="dashed-border my-2"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                                <span class="font-sans font-bold text-stone-700">${item.storeTime || '-'}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] text-stone-400 font-bold block">固定公休日</span>
+                                <span class="font-bold text-diary-secondary">${item.storeClosed || '無特別註記'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${item.storeVideo ? `
+                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                        </div>
+                        <a href="${item.storeVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                        </a>
+                    </div>` : ''}
+
+                    ${item.storeNotes ? `
+                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.storeNotes}</p>
+                    </div>` : ''}
+                `;
+            }
+
+            contentDiv.innerHTML = detailHtml;
+
+            // 綁定編輯與刪除行為
+            document.getElementById('detailDeleteBtn').onclick = () => confirmDelete(item.id);
+            document.getElementById('detailEditBtn').onclick = () => {
+                closeDetailModal();
+                setTimeout(() => openEditModal(item.id), 250);
+            };
+
+            const modal = document.getElementById('detailModal');
+            const overlay = modal.querySelector('.modal-overlay');
+            const content = modal.querySelector('.modal-content');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                content.classList.remove('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
+            }, 10);
+        }
+
+        function closeDetailModal() {
+            const modal = document.getElementById('detailModal');
+            if (modal.classList.contains('hidden')) return;
+
+            const overlay = modal.querySelector('.modal-overlay');
+            const content = modal.querySelector('.modal-content');
+
+            overlay.classList.add('opacity-0');
+            content.classList.add('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function openEditModal(id = null) {
+            const modal = document.getElementById('editModal');
+            const titleEl = document.getElementById('modalTitle');
+            const catSelect = document.getElementById('itemCategory');
+
+            // 1. 初始化欄位重置
+            document.getElementById('itemId').value = '';
+            document.getElementById('itemTitle').value = '';
+            catSelect.value = '展覽';
+
+            // 展覽專屬欄位重置
+            document.getElementById('exhibitionRegion').value = '台北';
+            document.getElementById('exhibitionLocation').value = '';
+            document.getElementById('exhibitionAddress').value = '';
+            document.getElementById('exhibitionStartDate').value = '';
+            document.getElementById('exhibitionEndDate').value = '';
+            document.getElementById('exhibitionTime').value = '';
+            document.getElementById('exhibitionTicket').value = '';
+            document.getElementById('exhibitionVideo').value = '';
+            document.getElementById('exhibitionNotes').value = '';
+
+            // 景點專屬欄位重置
+            document.getElementById('attractionRegion').value = '台北';
+            document.getElementById('attractionRegionForeign').value = '日本';
+            document.getElementById('attractionAddress').value = '';
+            document.getElementById('attractionTime').value = '';
+            document.getElementById('attractionTicket').value = '';
+            document.getElementById('attractionVideo').value = '';
+            document.getElementById('attractionNotes').value = '';
+
+            // 美食專屬欄位重置
+            document.getElementById('foodType').value = '日式';
+            document.getElementById('foodRegion').value = '高雄';
+            document.getElementById('foodRegionKaohsiung').value = '鹽埕區';
+            document.getElementById('foodRegionForeign').value = '日本';
+            document.getElementById('foodAddress').value = '';
+            document.getElementById('foodTime').value = '';
+            document.getElementById('foodClosed').value = '';
+            document.getElementById('foodVideo').value = '';
+            document.getElementById('foodNotes').value = '';
+
+            // 通用店家欄位重置 (已移除星級評分，新增地址與營業時間、影片)
+            document.getElementById('itemRegion').value = '台北';
+            document.getElementById('itemRegionForeign').value = '日本';
+            document.getElementById('storeAddress').value = '';
+            document.getElementById('storeTime').value = '';
+            document.getElementById('storeClosed').value = '';
+            document.getElementById('storeVideo').value = '';
+            document.getElementById('storeNotes').value = '';
+
+            // 2. 當為「編輯項目」時
+            if (id) {
+                titleEl.textContent = '編修回憶手札';
+                const item = items.find(i => i.id === id);
+                if (item) {
+                    document.getElementById('itemId').value = item.id;
+                    document.getElementById('itemTitle').value = item.title;
+                    catSelect.value = item.category;
+
+                    if (item.category === '展覽') {
+                        document.getElementById('exhibitionRegion').value = item.exhibitionRegion || '台北';
+                        document.getElementById('exhibitionLocation').value = item.exhibitionLocation || '';
+                        document.getElementById('exhibitionAddress').value = item.exhibitionAddress || '';
+                        document.getElementById('exhibitionStartDate').value = item.exhibitionStartDate || '';
+                        document.getElementById('exhibitionEndDate').value = item.exhibitionEndDate || '';
+                        document.getElementById('exhibitionTime').value = item.exhibitionTime || '';
+                        document.getElementById('exhibitionTicket').value = item.exhibitionTicket || '';
+                        document.getElementById('exhibitionVideo').value = item.exhibitionVideo || '';
+                        document.getElementById('exhibitionNotes').value = item.exhibitionNotes || '';
+                    } else if (item.category === '景點') {
+                        document.getElementById('attractionRegion').value = item.attractionRegion || '台北';
+                        document.getElementById('attractionRegionForeign').value = item.attractionRegionSub || '日本';
+                        document.getElementById('attractionAddress').value = item.attractionAddress || '';
+                        document.getElementById('attractionTime').value = item.attractionTime || '';
+                        document.getElementById('attractionTicket').value = item.attractionTicket || '';
+                        document.getElementById('attractionVideo').value = item.attractionVideo || '';
+                        document.getElementById('attractionNotes').value = item.attractionNotes || '';
+                    } else if (item.category === '美食') {
+                        document.getElementById('foodType').value = item.foodType || '日式';
+                        document.getElementById('foodRegion').value = item.foodRegion || '高雄';
+                        if (item.foodRegion === '高雄') {
+                            document.getElementById('foodRegionKaohsiung').value = item.foodRegionSub || '鹽埕區';
+                        } else if (item.foodRegion === '國外') {
+                            document.getElementById('foodRegionForeign').value = item.foodRegionSub || '日本';
+                        }
+                        document.getElementById('foodAddress').value = item.foodAddress || '';
+                        document.getElementById('foodTime').value = item.foodTime || '';
+                        document.getElementById('foodClosed').value = item.foodClosed || '';
+                        document.getElementById('foodVideo').value = item.foodVideo || '';
+                        document.getElementById('foodNotes').value = item.foodNotes || '';
+                    } else {
+                        document.getElementById('itemRegion').value = item.storeRegion || '台北';
+                        if (item.storeRegion === '國外') {
+                            document.getElementById('itemRegionForeign').value = item.storeRegionSub || '日本';
+                        }
+                        document.getElementById('storeAddress').value = item.storeAddress || '';
+                        document.getElementById('storeTime').value = item.storeTime || '';
+                        document.getElementById('storeClosed').value = item.storeClosed || '';
+                        document.getElementById('storeVideo').value = item.storeVideo || '';
+                        document.getElementById('storeNotes').value = item.storeNotes || '';
+                    }
+                }
+            } else {
+                titleEl.textContent = '撰寫新手記';
+                // 依當前 Bottom Navigation 切換，自動代入預設分類
+                if (currentFilter !== 'All') {
+                    catSelect.value = currentFilter;
+                }
+            }
+
+            updateFormFieldsVisibility();
+
+            const overlay = modal.querySelector('.modal-overlay');
+            const content = modal.querySelector('.modal-content');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                content.classList.remove('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
+            }, 10);
+        }
+
+        function closeEditModal() {
+            const modal = document.getElementById('editModal');
+            if (modal.classList.contains('hidden')) return;
+
+            const overlay = modal.querySelector('.modal-overlay');
+            const content = modal.querySelector('.modal-content');
+
+            overlay.classList.add('opacity-0');
+            content.classList.add('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        // 動態表單可見度處理 (Conditional Form Fields)
+        function updateFormFieldsVisibility() {
+            const category = document.getElementById('itemCategory').value;
+            
+            // 全隱藏
+            document.getElementById('exhibitionFields').classList.add('hidden');
+            document.getElementById('attractionFields').classList.add('hidden');
+            document.getElementById('foodFields').classList.add('hidden');
+            document.getElementById('defaultFields').classList.add('hidden');
+
+            // 根據選定類別，展開對應
+            if (category === '展覽') {
+                document.getElementById('exhibitionFields').classList.remove('hidden');
+            } else if (category === '景點') {
+                document.getElementById('attractionFields').classList.remove('hidden');
+                handleAttractionRegionChange();
+            } else if (category === '美食') {
+                document.getElementById('foodFields').classList.remove('hidden');
+                handleFoodRegionChange();
+            } else {
+                document.getElementById('defaultFields').classList.remove('hidden');
+                handleStoreRegionChange();
+            }
+        }
+
+        // 店家地區下拉二級連動
+        function handleStoreRegionChange() {
+            const region = document.getElementById('itemRegion').value;
+            const foreignContainer = document.getElementById('storeForeignContainer');
+            if (region === '國外') {
+                foreignContainer.classList.remove('hidden');
+            } else {
+                foreignContainer.classList.add('hidden');
+            }
+        }
+
+        // 景點地區下拉二級連動
+        function handleAttractionRegionChange() {
+            const region = document.getElementById('attractionRegion').value;
+            const foreignContainer = document.getElementById('attractionForeignContainer');
+            if (region === '國外') {
+                foreignContainer.classList.remove('hidden');
+            } else {
+                foreignContainer.classList.add('hidden');
+            }
+        }
+
+        // 美食地區下拉二級連動
+        function handleFoodRegionChange() {
+            const region = document.getElementById('foodRegion').value;
+            const kaohsiungContainer = document.getElementById('foodKaohsiungContainer');
+            const foreignContainer = document.getElementById('foodForeignContainer');
+
+            kaohsiungContainer.classList.add('hidden');
+            foreignContainer.classList.add('hidden');
+
+            if (region === '高雄') {
+                kaohsiungContainer.classList.remove('hidden');
+            } else if (region === '國外') {
+                foreignContainer.classList.remove('hidden');
+            }
+        }
+
+        function saveItem() {
+            const titleInput = document.getElementById('itemTitle');
+            const title = titleInput.value.trim();
+
+            if (!title) {
+                titleInput.classList.add('border-red-400', 'bg-red-50');
+                showToast('請填寫手記名稱 ✍️');
+                setTimeout(() => {
+                    titleInput.classList.remove('border-red-400', 'bg-red-50');
+                }, 1200);
+                return;
+            }
+
+            const id = document.getElementById('itemId').value;
+            const category = document.getElementById('itemCategory').value;
+
+            // 建立乾淨新物件
+            const newItem = {
+                id: id || 'item-' + Date.now().toString(),
+                title: title,
+                category: category,
+                timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
+            };
+
+            // 寫入各分類特殊欄位
+            if (category === '展覽') {
+                newItem.exhibitionRegion = document.getElementById('exhibitionRegion').value;
+                newItem.exhibitionLocation = document.getElementById('exhibitionLocation').value.trim();
+                newItem.exhibitionAddress = document.getElementById('exhibitionAddress').value.trim();
+                newItem.exhibitionStartDate = document.getElementById('exhibitionStartDate').value;
+                newItem.exhibitionEndDate = document.getElementById('exhibitionEndDate').value;
+                newItem.exhibitionTime = document.getElementById('exhibitionTime').value.trim();
+                newItem.exhibitionTicket = document.getElementById('exhibitionTicket').value.trim();
+                newItem.exhibitionVideo = document.getElementById('exhibitionVideo').value.trim();
+                newItem.exhibitionNotes = document.getElementById('exhibitionNotes').value.trim();
+            } else if (category === '景點') {
+                newItem.attractionRegion = document.getElementById('attractionRegion').value;
+                if (newItem.attractionRegion === '國外') {
+                    newItem.attractionRegionSub = document.getElementById('attractionRegionForeign').value;
+                } else {
+                    newItem.attractionRegionSub = '';
+                }
+                newItem.attractionAddress = document.getElementById('attractionAddress').value.trim();
+                newItem.attractionTime = document.getElementById('attractionTime').value.trim();
+                newItem.attractionTicket = document.getElementById('attractionTicket').value.trim();
+                newItem.attractionVideo = document.getElementById('attractionVideo').value.trim();
+                newItem.attractionNotes = document.getElementById('attractionNotes').value.trim();
+            } else if (category === '美食') {
+                newItem.foodType = document.getElementById('foodType').value;
+                newItem.foodRegion = document.getElementById('foodRegion').value;
+                if (newItem.foodRegion === '高雄') {
+                    newItem.foodRegionSub = document.getElementById('foodRegionKaohsiung').value;
+                } else if (newItem.foodRegion === '國外') {
+                    newItem.foodRegionSub = document.getElementById('foodRegionForeign').value;
+                } else {
+                    newItem.foodRegionSub = '';
+                }
+                newItem.foodAddress = document.getElementById('foodAddress').value.trim();
+                newItem.foodTime = document.getElementById('foodTime').value.trim();
+                newItem.foodClosed = document.getElementById('foodClosed').value.trim();
+                newItem.foodVideo = document.getElementById('foodVideo').value.trim();
+                newItem.foodNotes = document.getElementById('foodNotes').value.trim();
+            } else {
+                // 店家儲存邏輯 (更新為無星等、新地址、營業時間、影片、備註)
+                newItem.storeRegion = document.getElementById('itemRegion').value;
+                if (newItem.storeRegion === '國外') {
+                    newItem.storeRegionSub = document.getElementById('itemRegionForeign').value;
+                } else {
+                    newItem.storeRegionSub = '';
+                }
+                newItem.storeAddress = document.getElementById('storeAddress').value.trim();
+                newItem.storeTime = document.getElementById('storeTime').value.trim();
+                newItem.storeClosed = document.getElementById('storeClosed').value.trim();
+                newItem.storeVideo = document.getElementById('storeVideo').value.trim();
+                newItem.storeNotes = document.getElementById('storeNotes').value.trim();
+            }
+
+            if (id) {
+                // 編輯覆蓋
+                items = items.map(i => i.id === id ? newItem : i);
+                showToast('已妥善更新回憶手帳 ✨');
+            } else {
+                // 新增
+                items.push(newItem);
+                showToast('已將嶄新記憶收藏至手帳中 ✨');
+            }
+
+            saveToLocal();
+            renderItems();
+            closeEditModal();
+        }
+
+        // 自訂刪除視窗邏輯
+        function confirmDelete(id) {
+            itemToDelete = id;
+            const modal = document.getElementById('deleteModal');
+            const overlay = modal.querySelector('.modal-overlay');
+            const content = modal.querySelector('.modal-content');
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                overlay.classList.remove('opacity-0');
+                content.classList.remove('translate-y-10', 'opacity-0');
+            }, 10);
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteModal');
+            if (modal.classList.contains('hidden')) return;
+
+            const overlay = modal.querySelector('.modal-overlay');
+            const content = modal.querySelector('.modal-content');
+
+            overlay.classList.add('opacity-0');
+            content.classList.add('translate-y-10', 'opacity-0');
+
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                itemToDelete = null;
+            }, 250);
+        }
+
+        function executeDelete() {
+            if (itemToDelete) {
+                items = items.filter(i => i.id !== itemToDelete);
+                saveToLocal();
+                renderItems();
+                showToast('已自手帳本中撕去這頁回憶 🍂');
+                closeDeleteModal();
+                closeDetailModal();
+            }
+        }
+
+        // --- Toast 提示功能 ---
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = msg;
+            toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+            }, 2500);
+        }
+
+        // --- 視窗載入啟動點 ---
+        window.onload = function () {
+            renderItems();
+        }
+    </script>
+</body>
+</html>
