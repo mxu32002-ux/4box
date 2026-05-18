@@ -1366,6 +1366,7 @@
             const category = document.getElementById('itemCategory').value;
 
             // 建立乾淨新物件
+           // 建立乾淨新物件
             const newItem = {
                 id: id || 'item-' + Date.now().toString(),
                 title: title,
@@ -1412,7 +1413,6 @@
                 newItem.foodVideo = document.getElementById('foodVideo').value.trim();
                 newItem.foodNotes = document.getElementById('foodNotes').value.trim();
             } else {
-                // 店家儲存邏輯 (更新為無星等、新地址、營業時間、影片、備註)
                 newItem.storeRegion = document.getElementById('itemRegion').value;
                 if (newItem.storeRegion === '國外') {
                     newItem.storeRegionSub = document.getElementById('itemRegionForeign').value;
@@ -1435,9 +1435,55 @@
                 items.push(newItem);
                 showToast('已將嶄新記憶收藏至手帳中 ✨');
             }
-
+            
             saveToLocal();
             renderItems();
+            
+            // ==========================================
+            // 🚀 【全新擴充】自動同步將資料送往 Notion 雲端
+            // ==========================================
+            
+            // 1. 將本地方言欄位轉換為後端需要的標準對齊名稱
+            const payload = {
+                name: newItem.title,
+                category: newItem.category,
+                mainRegion: newItem.exhibitionRegion || newItem.attractionRegion || newItem.foodRegion || newItem.storeRegion || '',
+                subRegion: newItem.exhibitionLocation || newItem.attractionRegionSub || newItem.foodRegionSub || newItem.storeRegionSub || '',
+                address: newItem.exhibitionAddress || newItem.attractionAddress || newItem.foodAddress || newItem.storeAddress || '',
+                openTime: newItem.exhibitionTime || newItem.attractionTime || newItem.foodTime || newItem.storeTime || '',
+                offDay: newItem.foodClosed || newItem.storeClosed || '',
+                ticketInfo: newItem.exhibitionTicket || newItem.attractionTicket || '',
+                foodType: newItem.foodType || '',
+                startDate: newItem.exhibitionStartDate || '',
+                endDate: newItem.exhibitionEndDate || '',
+                videoUrl: newItem.exhibitionVideo || newItem.attractionVideo || newItem.foodVideo || newItem.storeVideo || '',
+                note: newItem.exhibitionNotes || newItem.attractionNotes || newItem.foodNotes || newItem.storeNotes || ''
+            };
+
+            // 2. 透過先前亮起大綠燈的 Render 伺服器傳送出去
+            fetch('https://fourbox.onrender.com/api/add-note', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    showToast('📜 已同步妥善收藏至 Notion 雲端！');
+                } else {
+                    console.error('Notion 寫入失敗:', data.error);
+                    showToast('⚠️ 本地已存，但雲端寫入失敗');
+                }
+            })
+            .catch(err => {
+                console.error('網路連線失敗:', err);
+                showToast('📡 雲端連線失敗，請檢查網路');
+            });
+
+            // ==========================================
+
             closeEditModal();
         }
 
