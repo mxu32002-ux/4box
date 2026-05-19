@@ -140,20 +140,41 @@ app.get('/api/notion', async (req, res) => {
     }
 });
 
-// === 新增：從 Notion 刪除（封存）某一筆手帳資料 ===
+// === 🗑️ 超級防呆爆破版：從 Notion 刪除（封存）某一筆手帳資料 ===
 app.delete('/api/notion/:id', async (req, res) => {
     try {
-        const { id } = req.params;
+        let { id } = req.params;
         
-        // Notion 的刪除本質上是將頁面「封存 (in_trash: true)」
-        await notion.pages.update({
+        console.log("====================================");
+        console.log("🎬 收到前端刪除密令！傳進來的原始 ID:", id);
+        console.log("====================================");
+
+        // 🎯 關鍵防呆：Notion Page ID 如果少了連字號，API 會直接報錯拒絕。
+        // 我們幫它自動補回標準的 8-4-4-4-12 格式：
+        if (id && id.length === 32 && !id.includes('-')) {
+            id = `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`;
+            console.log("🔧 偵測到未格式化的 ID，已自動修正為 Notion 標準格式:", id);
+        }
+
+        // 確保最上面宣告的 notion 變數名稱有對準（大寫小寫相容處理）
+        const myNotionClient = (typeof notion !== 'undefined') ? notion : 
+                               (typeof Notion !== 'undefined') ? Notion : null;
+
+        if (!myNotionClient) {
+            throw new Error("後端找不到對應的 notion 變數名稱，請檢查最上方的宣告！");
+        }
+
+        // 🚀 正式衝進 Notion 執行封存（丟進垃圾桶）
+        const response = await myNotionClient.pages.update({
             page_id: id,
             in_trash: true
         });
 
+        console.log("🟢 恭喜！Notion 官方已成功將該頁面封存移至垃圾桶！");
         res.json({ success: true, message: '雲端資料已成功刪除！' });
+
     } catch (error) {
-        console.error("Notion 刪除失敗:", error);
+        console.error("❌ 後端執行 Notion 刪除失敗，錯誤原因:", error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
