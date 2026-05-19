@@ -134,4 +134,20 @@ app.get('/api/notion', async (req, res) => {
     }
 });
 
+// === 新增：從 Notion 刪除（封存）某一筆手帳資料 ===
+app.delete('/api/notion/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        // Notion 的刪除本質上是將頁面「封存 (in_trash: true)」
+        await notion.pages.update({
+            page_id: id,
+            in_trash: true
+        });
 
+        res.json({ success: true, message: '雲端資料已成功刪除！' });
+    } catch (error) {
+        console.error("Notion 刪除失敗:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
