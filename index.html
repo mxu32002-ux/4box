@@ -1574,7 +1574,7 @@ function executeDelete() {
         });
     }
 }
-        // --- Toast 提示功能 ---
+       // --- Toast 提示功能 ---
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').textContent = msg;
@@ -1585,11 +1585,8 @@ function executeDelete() {
             }, 2500);
         }
 
-        // --- 視窗載入啟動點 ---
-        window.onload = function () {
-            renderItems();
-        }
-    </script>
-</script>   
+        // 🎯【終極修正】拿掉會洗掉雲端資料的 window.onload，讓網頁只聽 loadNotionCloudData 的指揮！
+        // 🚫 這裡原本的 window.onload 已經被我們安全移除
+    </script> 
 </body>
 </html>
