@@ -140,41 +140,34 @@ app.get('/api/notion', async (req, res) => {
     }
 });
 
-// === 🗑️ 免費版相容：用更新狀態代替刪除，繞過 Notion 付費牆 ===
+// === 🗑️ 免費版相容：更新 status 欄位為 deleted，完美繞過付費牆 ===
 app.delete('/api/notion/:id', async (req, res) => {
     try {
         const { id } = req.params;
         console.log("====================================");
-        console.log("🎬 收到免費版刪除指令，正在標記 ID:", id);
+        console.log("🎬 免費版繞道工法！正在將此 ID 標記為刪除:", id);
+        console.log("====================================");
 
         const myNotionClient = (typeof notion !== 'undefined') ? notion : 
                                (typeof Notion !== 'undefined') ? Notion : null;
                                
         if (!myNotionClient) throw new Error("找不到 notion 變數");
 
-        // 🚀 不用 in_trash，改用免費版絕對允許的屬性更新！
-        // 我們把分類屬性直接改成 "已刪除"，或者把標題改掉
+        // 🚀 衝進 Notion，把 status 欄位改成 "deleted"
         await myNotionClient.pages.update({
             page_id: id,
             properties: {
-                // 方案 A：如果你的資料庫有「分類」或「狀態」屬性，把它改成 "已刪除"
-                '分類': {
-                    select: { name: '已刪除' }
-                },
-                // 方案 B：同時在標題加上標記，方便雙重保險過濾
-                '名稱': {
-                    title: [
-                        { text: { content: '[DELETED] 已刪除資料' } }
-                    ]
+                'status': {
+                    select: { name: 'deleted' }
                 }
             }
         });
 
-        console.log("🟢 成功！已在 Notion 端將資料標記為 [已刪除]");
+        console.log("🟢 成功！Notion 端該頁面的 status 已被改為 deleted！");
         res.json({ success: true, message: '雲端資料已成功標記刪除！' });
 
     } catch (error) {
-        console.error("❌ 後端標記失敗:", error);
+        console.error("❌ 後端標記失敗，錯誤原因:", error.message);
         res.status(500).json({ success: false, error: error.message });
     }
 });
