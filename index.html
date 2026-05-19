@@ -1513,35 +1513,42 @@ window.addEventListener('DOMContentLoaded', () => {
 
         function executeDelete() {
     if (itemToDelete) {
-        // 1. 為了不讓使用者覺得網頁卡住，我們先在前端把卡片藏起來（提升速度感）
+        // 1. 先在前端把卡片藏起來，讓使用者覺得點擊反應很快
         items = items.filter(i => i.id !== itemToDelete);
         renderItems(); 
 
-        // 🚀 2. 同步發射 DELETE 密令給 Render 後端，把 Notion 總部的資料連根拔起！
+        // 2. 正式發射 DELETE 密令給 Render
         fetch(`https://fourbox.onrender.com/api/notion/${itemToDelete}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log("☁️ Notion 雲端資料已同步抹除成功！");
+                console.log("☁️ Notion 雲端資料已成功提出刪除申請");
                 
-                // 3. 徹底清空本地舊快取，並跟雲端重新校對一次，確保資料100%乾淨
+                // 📜 徹底清空本地舊快取
                 localStorage.clear();
-                loadNotionCloudData(); 
+
+                // ==========================================================
+                // ⏱️ 【關鍵魔法】給 Notion 半秒鐘的開工時間，再拉取最新清單！
+                // ==========================================================
+                setTimeout(() => {
+                    loadNotionCloudData(); // 半秒後再重新拉取，這時候資料保證死透了！
+                    console.log("🔄 雲端快照已延遲刷新，確保不與 Notion 衝突。");
+                }, 500); // 500 毫秒 = 0.5 秒
+
             } else {
-                console.error("雲端刪除失敗，原因:", data.error);
-                // 防呆：如果雲端刪除失敗了，我們把卡片重新拉回來，不要讓使用者誤會
+                console.error("雲端刪除失敗:", data.error);
                 loadNotionCloudData();
                 alert("雲端手帳刪除失敗，請稍後再試！");
             }
         })
         .catch(err => {
-            console.error("發送刪除請求時發生嚴重錯誤:", err);
+            console.error("嚴重錯誤:", err);
             loadNotionCloudData();
         });
 
-        // 4. 原本網頁那充滿儀式感的優雅 UI 控制（完好保留）
+        // 3. 保留你充滿儀式感的優雅 UI 特效
         showToast('已自手帳本中撕去這頁回憶 🍂');
         closeDeleteModal();
         closeDetailModal();
