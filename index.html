@@ -1525,13 +1525,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
        let isDeleting = false; 
 
+let isDeleting = false; 
+
 function executeDelete() {
     if (isDeleting) return; 
     
     if (itemToDelete) {
         isDeleting = true; 
 
-        // 1. 畫面上立刻藏起來
+        // 1. 畫面上立刻藏起來，營造流暢的速度感
         items = items.filter(i => i.id !== itemToDelete);
         renderItems(); 
 
@@ -1539,37 +1541,38 @@ function executeDelete() {
         closeDeleteModal();
         closeDetailModal();
 
-        console.log("🚀 [終極物理消滅] 正在發射刪除指令，目標 ID:", itemToDelete);
+        console.log("🚀 [免費相容版] 正在發射標記刪除指令，目標 ID:", itemToDelete);
 
-        // 2. 發射密令給 Render
+        // 2. 正式發射密令給 Render
         fetch(`https://fourbox.onrender.com/api/notion/${itemToDelete}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log("🟢 雲端刪除成功！現在開始物理毀滅本地記憶...");
+                console.log("🟢 雲端標記成功！");
                 
-                // 🔥【連根拔起 A】強制清空瀏覽器所有可能殘留的快取與舊資料
+                // 📜 清空本地舊快取
                 localStorage.clear();
-                sessionStorage.clear();
-                items = []; 
 
-                // 🔥【連根拔起 B】不給它拉舊資料的機會，直接強迫整個網頁重新整理（F5效果）！
-                // 這樣瀏覽器大腦會完全重開機，重新跑一次最乾淨的 loadNotionCloudData()
+                // ⏱️ 給 Notion 雲端 1 秒鐘開工，然後默默在背景刷新，不重新整理網頁！
                 setTimeout(() => {
-                    window.location.reload(); 
-                }, 1000); // 給 Notion 留 1 秒鐘開工，隨後網頁直接原地重開機！
+                    loadNotionCloudData(); // 默默在背景拉取最新乾淨的清單
+                    isDeleting = false;    // 解除鎖定
+                    console.log("🔄 雲端快照刷新完畢，這筆資料永遠不顯示。");
+                }, 1000);
 
             } else {
                 console.error("雲端刪除失敗:", data.error);
                 isDeleting = false;
+                loadNotionCloudData(); // 失敗了就默默拉回來
                 alert("雲端手帳刪除失敗：" + data.error);
             }
         })
         .catch(err => {
             console.error("嚴重錯誤:", err);
             isDeleting = false;
+            loadNotionCloudData();
         });
     }
 }
