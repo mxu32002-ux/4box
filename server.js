@@ -153,7 +153,7 @@ async function loadNotionData() {
 
         // 2. 向你的 Render 後端要資料
         // ⚠️ 請把底下的網址改成你真正的 Render 網址（昨天測試成功 success:true 的那個）
-        const response = await fetch('https://你的專案名字.onrender.com/api/notion'); 
+        const response = await fetch('https://fourbox.onrender.com/api/notion'); 
         const result = await response.json();
         
         if (result.success && result.data) {
