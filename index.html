@@ -1306,7 +1306,7 @@
             const category = document.getElementById('itemCategory').value;
 
             
-           // 建立乾淨新物件
+         // 建立乾淨新物件
             const newItem = {
                 id: id || 'item-' + Date.now().toString(),
                 title: title,
@@ -1486,52 +1486,3 @@
     </script>
 </body>
 </html>
-
-// === 建立乾淨新物件 (你原本的那段) ===
-            const newItem = {
-                id: id || 'item-' + Date.now().toString(),
-                title: title,
-                category: category,
-                timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
-            };
-
-            // ==========================================================
-            // 🚀 【請在下面直接無痛接上這段：強行噴射到 Render + 重新整理】
-            // ==========================================================
-            
-            // 這裡把你想送去 Notion 的所有欄位通通打包（根據你當初表單輸入的變數名稱調整）
-            const formData = {
-                category: newItem.category,
-                title: newItem.title,
-                region: document.getElementById('itemRegion')?.value || '',     // 📝請對照你輸入框的真實 ID
-                address: document.getElementById('itemAddress')?.value || '',   // 📝請對照你輸入框的真實 ID
-                time: document.getElementById('itemTime')?.value || '',         // 📝請對照你輸入框的真實 ID
-                holiday: document.getElementById('itemHoliday')?.value || '',   // 📝請對照你輸入框的真實 ID
-                ticket: document.getElementById('itemTicket')?.value || '',     // 📝請對照你輸入框的真實 ID
-                notes: document.getElementById('itemNotes')?.value || ''        // 📝請對照你輸入框的真實 ID
-            };
-
-            // 發送給後端
-            fetch('https://你的專案名字.onrender.com/api/notion', { // ⚠️請改成你真正的 Render 網址
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(formData)
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // 1. 觸發你那精美的 Toast 提示！
-                    const toastMsg = document.getElementById('toastMsg');
-                    if (toastMsg) toastMsg.innerText = "📜 已同步妥善收藏至 Notion 雲端！";
-                    
-                    // 這裡如果原本有讓 toast 顯示的 function (例如 showToast())，請照舊呼叫它
-                    if (typeof showToast === 'function') showToast(); 
-                    
-                    // 2. 關閉輸入視窗
-                    if (typeof closeEditModal === 'function') closeEditModal();
-                    
-                    // 3. 【史詩級核心】立刻重新刷新畫面，卡片當場多一張！
-                    loadNotionData(); 
-                }
-            })
-            .catch(err => console.error("傳送至雲端失敗:", err));
