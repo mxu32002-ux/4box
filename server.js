@@ -127,7 +127,12 @@ app.get('/api/notion', async (req, res) => {
                 time: props['營業/開放時間']?.rich_text[0]?.plain_text || '',
                 holiday: props['固定公休日']?.rich_text[0]?.plain_text || '',
                 ticket: props['門票/票券資訊']?.rich_text[0]?.plain_text || '',
-                notes: props['隨手札記備註']?.rich_text[0]?.plain_text || ''
+                notes: props['隨手札記備註']?.rich_text[0]?.plain_text || '',
+                
+                // =================================================================
+                // 🎯 【終極連線核心】把 Notion 的 status 欄位值拿出來，傳回給前端！
+                // =================================================================
+                status: props['status']?.select?.name || ''
             };
         });
 
@@ -139,7 +144,6 @@ app.get('/api/notion', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
 // === 🗑️ 免費版相容：更新 status 欄位為 deleted，完美繞過付費牆 ===
 app.delete('/api/notion/:id', async (req, res) => {
     try {
