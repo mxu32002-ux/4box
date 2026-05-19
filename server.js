@@ -93,46 +93,20 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// === 新增：從 Notion 讀取所有手帳資料 ===
-app.get('/api/notion', async (req, res) => {
-    try {
-        const databaseId = process.env.NOTION_DATABASE_ID;
-        
-        // 向 Notion 總部發出查詢請求
-        const response = await notion.databases.query({
-            database_id: databaseId,
-            // 排序：讓最新建立的資料排在最前面
-            sorts: [
-                {
-                    timestamp: 'created_time',
-                    direction: 'descending',
-                },
-            ],
-        });
-
-        // 把 Notion 那堆複雜的 JSON 格式，翻譯成前端網頁看得懂的乾淨陣列
+// 把 Notion 那堆複雜的 JSON 格式，翻譯成前端網頁看得懂的乾淨陣列
         const items = response.results.map(page => {
             const props = page.properties;
             
-            // 這裡的安全保護：如果某個欄位在 Notion 是空的，就給它預設文字
+            // 使用 ['欄位名'] 寫法，完美避開斜線 / 造成的程式誤判
             return {
                 id: page.id,
-                title: props.名稱?.title[0]?.plain_text || '未命名',
-                category: props.類別?.select?.name || '未分類',
-                region: props.主要地區?.select?.name || props.主要地區?.rich_text[0]?.plain_text || '',
-                address: props.詳細地址?.rich_text[0]?.plain_text || '',
-                time: props.營業/開放時間?.rich_text[0]?.plain_text || '',
-                holiday: props.固定公休日?.rich_text[0]?.plain_text || '',
-                ticket: props.門票/票券資訊?.rich_text[0]?.plain_text || '',
-                notes: props.隨手札記備註?.rich_text[0]?.plain_text || ''
+                title: props['名稱']?.title[0]?.plain_text || '未命名',
+                category: props['類別']?.select?.name || '未分類',
+                region: props['主要地區']?.select?.name || props['主要地區']?.rich_text[0]?.plain_text || '',
+                address: props['詳細地址']?.rich_text[0]?.plain_text || '',
+                time: props['營業/開放時間']?.rich_text[0]?.plain_text || '',
+                holiday: props['固定公休日']?.rich_text[0]?.plain_text || '',
+                ticket: props['門票/票券資訊']?.rich_text[0]?.plain_text || '',
+                notes: props['隨手札記備註']?.rich_text[0]?.plain_text || ''
             };
         });
-
-        // 成功把乾淨的資料回傳給前端 App
-        res.json({ success: true, data: items });
-
-    } catch (error) {
-        console.error("Notion 讀取失敗詳細原因:", error.body || error);
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
