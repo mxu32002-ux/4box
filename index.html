@@ -1487,8 +1487,11 @@
     </script>
  <script>
 async function loadNotionData() {
-    // 🎯 修正版：直接用 document.body 或者是你網頁已知的元素來試探
-    // 我們同時鎖定幾個可能的名字，誰在就用誰！
+   localStorage.clear(); 
+    if (typeof items !== 'undefined') items = []; 
+
+    const listContainer = document.getElementById('diaryList') || 
+                          document.getElementById('cardsContainer') ||
     const listContainer = document.getElementById('diaryList') || 
                           document.getElementById('cardsContainer') || 
                           document.getElementById('items-grid') ||
