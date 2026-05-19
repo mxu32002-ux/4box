@@ -1313,6 +1313,47 @@
                 category: category,
                 timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
             };
+
+            // ==========================================================
+            // 🚀 【就是這裡！直接黏貼在 newItem 下方】將資料發送給 Render 雲端
+            // ==========================================================
+            const formData = {
+                category: newItem.category,
+                title: newItem.title,
+                region: document.getElementById('itemRegion')?.value || '',     
+                address: document.getElementById('itemAddress')?.value || '',   
+                time: document.getElementById('itemTime')?.value || '',         
+                holiday: document.getElementById('itemHoliday')?.value || '',   
+                ticket: document.getElementById('itemTicket')?.value || '',     
+                notes: document.getElementById('itemNotes')?.value || ''        
+            };
+
+            // ⚠️ 請把底下的網址改成你真正的 Render 後端網址
+            fetch('https://fourbox.onrender.com/api/notion', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 觸發你的精美 Toast 提示
+                    const toastMsg = document.getElementById('toastMsg');
+                    if (toastMsg) {
+                        toastMsg.innerText = "📜 已同步妥善收藏至 Notion 雲端！";
+                        if (typeof showToast === 'function') showToast();
+                    }
+                    
+                    // 存檔成功，自動關閉彈出視窗
+                    if (typeof closeEditModal === 'function') closeEditModal();
+                    
+                    // 立刻重新執行撈資料函數，讓新卡片在網頁上當場刷出來！
+                    loadNotionData(); 
+                } else {
+                    alert("同步至雲端失敗：" + data.error);
+                }
+            })
+            .catch(err => console.error("傳送至雲端發生嚴重錯誤:", err));
             
             // 寫入各分類特殊欄位
             if (category === '展覽') {
