@@ -1512,14 +1512,41 @@ window.addEventListener('DOMContentLoaded', () => {
         }
 
         function executeDelete() {
-            if (itemToDelete) {
-                items = items.filter(i => i.id !== itemToDelete);
-                saveToLocal();
-                renderItems();
-                showToast('已自手帳本中撕去這頁回憶 🍂');
-                closeDeleteModal();
-                closeDetailModal();
+    if (itemToDelete) {
+        // 1. 為了不讓使用者覺得網頁卡住，我們先在前端把卡片藏起來（提升速度感）
+        items = items.filter(i => i.id !== itemToDelete);
+        renderItems(); 
+
+        // 🚀 2. 同步發射 DELETE 密令給 Render 後端，把 Notion 總部的資料連根拔起！
+        fetch(`https://fourbox.onrender.com/api/notion/${itemToDelete}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log("☁️ Notion 雲端資料已同步抹除成功！");
+                
+                // 3. 徹底清空本地舊快取，並跟雲端重新校對一次，確保資料100%乾淨
+                localStorage.clear();
+                loadNotionCloudData(); 
+            } else {
+                console.error("雲端刪除失敗，原因:", data.error);
+                // 防呆：如果雲端刪除失敗了，我們把卡片重新拉回來，不要讓使用者誤會
+                loadNotionCloudData();
+                alert("雲端手帳刪除失敗，請稍後再試！");
             }
+        })
+        .catch(err => {
+            console.error("發送刪除請求時發生嚴重錯誤:", err);
+            loadNotionCloudData();
+        });
+
+        // 4. 原本網頁那充滿儀式感的優雅 UI 控制（完好保留）
+        showToast('已自手帳本中撕去這頁回憶 🍂');
+        closeDeleteModal();
+        closeDetailModal();
+    }
+}
         }
 
         // --- Toast 提示功能 ---
