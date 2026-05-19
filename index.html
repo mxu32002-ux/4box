@@ -608,6 +608,7 @@
             '美食': '<i class="fa-solid fa-utensils"></i>',
             '店家': '<i class="fa-solid fa-store"></i>'
         };
+
         // --- Demo 資料初始化 ---
         if (items.length === 0) {
             items = [
@@ -665,6 +666,9 @@
                     storeNotes: '駁二非常放鬆的閱讀空間，紅磚與港灣相伴，選書極具設計與文藝感，適合散步後來沉澱心靈。',
                     timestamp: Date.now()
                 }
+            ];
+            saveToLocal();
+        }
 
         // --- 核心儲存功能 (Core Database Sync) ---
         function saveToLocal() {
@@ -761,7 +765,7 @@
 
             if (filtered.length === 0) {
                 container.innerHTML = `
-                    <div id="diaryList class="flex flex-col items-center justify-center py-20 text-center">
+                    <div class="flex flex-col items-center justify-center py-20 text-center">
                         <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-stone-300 border border-diary-light/40 mb-3 shadow-soft">
                             <i class="fa-solid fa-wind text-xl"></i>
                         </div>
@@ -1361,15 +1365,16 @@
             const id = document.getElementById('itemId').value;
             const category = document.getElementById('itemCategory').value;
 
-            
-         // 建立乾淨新物件
+            // 建立乾淨新物件
+           // 建立乾淨新物件
             const newItem = {
                 id: id || 'item-' + Date.now().toString(),
                 title: title,
                 category: category,
                 timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
             };
-       
+
+            
             // 寫入各分類特殊欄位
             if (category === '展覽') {
                 newItem.exhibitionRegion = document.getElementById('exhibitionRegion').value;
