@@ -854,6 +854,18 @@ window.addEventListener('DOMContentLoaded', () => {
         function openDetailModal(id) {
             const item = items.find(i => i.id === id);
             if (!item) return;
+            function openDetailModal(id) {
+    const item = items.find(i => i.id === id);
+    if (!item) return;
+
+    // ==========================================================
+    // 🎯 【就是現在！請在這裡精確補上這行補槍指令】
+    // ==========================================================
+    itemToDelete = id; // ✨ 讓刪除法官知道，我們現在瞄準的就是這筆 Notion 真 ID！
+
+    document.getElementById('detailCategoryIcon').innerHTML = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
+    // ...後面原本處理詳細欄位的程式碼照舊...
+}
 
             document.getElementById('detailCategoryIcon').innerHTML = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
             
