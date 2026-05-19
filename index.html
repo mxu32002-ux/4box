@@ -1544,10 +1544,11 @@ window.addEventListener('DOMContentLoaded', () => {
                 // ==========================================================
                 // ⏱️ 【關鍵魔法】給 Notion 半秒鐘的開工時間，再拉取最新清單！
                 // ==========================================================
-                setTimeout(() => {
-                    loadNotionCloudData(); // 半秒後再重新拉取，這時候資料保證死透了！
-                    console.log("🔄 雲端快照已延遲刷新，確保不與 Notion 衝突。");
-                }, 500); // 500 毫秒 = 0.5 秒
+               setTimeout(() => {
+                    loadNotionCloudData(); // 2.5秒後再重新拉取，這時候資料保證死透了！
+                    console.log("🔄 雲端快照刷新完畢，解除鎖定。");
+                    isDeleting = false; // 🔓 解除鎖定
+                }, 2500);
 
             } else {
                 console.error("雲端刪除失敗:", data.error);
