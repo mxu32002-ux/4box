@@ -140,38 +140,36 @@ app.get('/api/notion', async (req, res) => {
     }
 });
 
-// === 🗑️ 超級防呆爆破版：從 Notion 刪除（封存）某一筆手帳資料 ===
+// === 🗑️ 真正同步確認版：從 Notion 刪除（封存）某一筆手帳資料 ===
 app.delete('/api/notion/:id', async (req, res) => {
     try {
-        let { id } = req.params;
+        const { id } = req.params;
+        console.log("====================================");
+        console.log("🎬 後端正式動手，目標 ID:", id);
         
-        console.log("====================================");
-        console.log("🎬 收到前端刪除密令！傳進來的原始 ID:", id);
-        console.log("====================================");
-
-        // 🎯 關鍵防呆：Notion Page ID 如果少了連字號，API 會直接報錯拒絕。
-        // 我們幫它自動補回標準的 8-4-4-4-12 格式：
-        if (id && id.length === 32 && !id.includes('-')) {
-            id = `${id.slice(0, 8)}-${id.slice(8, 12)}-${id.slice(12, 16)}-${id.slice(16, 20)}-${id.slice(20)}`;
-            console.log("🔧 偵測到未格式化的 ID，已自動修正為 Notion 標準格式:", id);
-        }
-
-        // 確保最上面宣告的 notion 變數名稱有對準（大寫小寫相容處理）
+        // 確保變數名稱大寫小寫相容
         const myNotionClient = (typeof notion !== 'undefined') ? notion : 
                                (typeof Notion !== 'undefined') ? Notion : null;
+                               
+        if (!myNotionClient) throw new Error("找不到 notion 變數");
 
-        if (!myNotionClient) {
-            throw new Error("後端找不到對應的 notion 變數名稱，請檢查最上方的宣告！");
-        }
-
-        // 🚀 正式衝進 Notion 執行封存（丟進垃圾桶）
+        // 🚀 執行更新，並把 Notion 官方「真正修改完後」的結果存進 response
         const response = await myNotionClient.pages.update({
             page_id: id,
             in_trash: true
         });
 
-        console.log("🟢 恭喜！Notion 官方已成功將該頁面封存移至垃圾桶！");
-        res.json({ success: true, message: '雲端資料已成功刪除！' });
+        // 🔍 【核心關鍵】檢查 Notion 回傳的狀態，它到底有沒有真的被丟進垃圾桶？
+        console.log("🧐 Notion 官方回傳的封存狀態 (in_trash):", response.in_trash);
+        console.log("====================================");
+
+        // 只有當 Notion 官方親口承認 in_trash 是 true 時，才回傳 success: true
+        if (response.in_trash === true || response.archived === true) {
+            res.json({ success: true, message: '雲端資料已真正移至垃圾桶！' });
+        } else {
+            console.log("⚠️ 警告：Notion 雖然回應了，但狀態並非封存！");
+            res.json({ success: false, error: 'Notion 雲端未能成功封存資料' });
+        }
 
     } catch (error) {
         console.error("❌ 後端執行 Notion 刪除失敗，錯誤原因:", error.message);
