@@ -609,66 +609,6 @@
             '店家': '<i class="fa-solid fa-store"></i>'
         };
 
-        // --- Demo 資料初始化 ---
-        if (items.length === 0) {
-            items = [
-                {
-                    id: 'demo-1',
-                    title: '「奇美博物館」從拉斐爾到梵谷特展',
-                    category: '展覽',
-                    exhibitionRegion: '台南',
-                    exhibitionLocation: '奇美博物館特展廳',
-                    exhibitionAddress: '台南市仁德區文華路二段66號',
-                    exhibitionStartDate: '2026-05-02',
-                    exhibitionEndDate: '2026-09-01',
-                    exhibitionTime: '09:30 - 17:30 (每週三休館)',
-                    exhibitionTicket: '全票 550 元 / 優待票 450 元',
-                    exhibitionVideo: 'https://www.youtube.com/watch?v=example1',
-                    exhibitionNotes: '非常震撼的西洋大師名畫展！第一次在台灣看到波提切利與拉斐爾的原畫，色彩層次極其細膩，建議提早一個月預約場次。',
-                    timestamp: Date.now() - 50000
-                },
-                {
-                    id: 'demo-2',
-                    title: '阿里山眠月線舊鐵道探尋',
-                    category: '景點',
-                    attractionRegion: '嘉義',
-                    attractionRegionSub: '',
-                    attractionAddress: '嘉義縣阿里山鄉眠月線森林鐵道',
-                    attractionTime: '全天開放 (需事先申請入山)',
-                    attractionTicket: '免費 (需一葉蘭保留區許可證)',
-                    attractionVideo: 'https://www.youtube.com/watch?v=example2',
-                    attractionNotes: '舊鐵道與參天巨木交織的奇幻秘境，走在荒廢坍塌的明隧道上，有一種時間靜止的錯覺。霧氣飄來時如置身仙境！',
-                    timestamp: Date.now() - 100000
-                },
-                {
-                    id: 'demo-3',
-                    title: '日和手作珈琲 (鹽埕老鋪)',
-                    category: '美食',
-                    foodType: '其他',
-                    foodRegion: '高雄',
-                    foodRegionSub: '鹽埕區',
-                    foodAddress: '高雄市鹽埕區五福四路112號',
-                    foodTime: '11:00 - 19:00',
-                    foodClosed: '每週二、三公休',
-                    foodVideo: 'https://www.youtube.com/watch?v=example3',
-                    foodNotes: '手沖單品非常順口，店內放的黑膠唱片很有品味。肉桂捲外酥內軟，淋上焦糖醬堪稱完美，值得無數次回訪！',
-                    timestamp: Date.now() - 20000
-                },
-                {
-                    id: 'demo-4',
-                    title: '誠品生活 駁二店',
-                    category: '店家',
-                    storeRegion: '高雄',
-                    storeRegionSub: '',
-                    storeAddress: '高雄市鹽埕區大勇路3號 (C4倉庫)',
-                    storeTime: '11:00 - 21:00',
-                    storeVideo: 'https://www.youtube.com/watch?v=example4',
-                    storeNotes: '駁二非常放鬆的閱讀空間，紅磚與港灣相伴，選書極具設計與文藝感，適合散步後來沉澱心靈。',
-                    timestamp: Date.now()
-                }
-            ];
-            saveToLocal();
-        }
 
         // --- 核心儲存功能 (Core Database Sync) ---
         function saveToLocal() {
