@@ -5,9 +5,15 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
-app.use(express.json());
+// === 🔓 後端大開門：強制允許前端進行 GET, POST, 以及關鍵的 DELETE 動作 ===
+const cors = require('cors'); // 確保最上面有引入 cors 套件
+app.use(cors({
+    origin: '*', // 允許來自任何地方的網頁讀取
+    methods: ['GET', 'POST', 'DELETE', 'OPTIONS'], // 👈 必須指名道姓把 DELETE 寫出來！
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
+app.use(express.json());
 const notion = new Client({
   auth: process.env.NOTION_INTEGRATION_TOKEN
 });
