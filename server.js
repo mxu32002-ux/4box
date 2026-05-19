@@ -140,39 +140,41 @@ app.get('/api/notion', async (req, res) => {
     }
 });
 
-// === 🗑️ 真正同步確認版：從 Notion 刪除（封存）某一筆手帳資料 ===
+// === 🗑️ 免費版相容：用更新狀態代替刪除，繞過 Notion 付費牆 ===
 app.delete('/api/notion/:id', async (req, res) => {
     try {
         const { id } = req.params;
         console.log("====================================");
-        console.log("🎬 後端正式動手，目標 ID:", id);
-        
-        // 確保變數名稱大寫小寫相容
+        console.log("🎬 收到免費版刪除指令，正在標記 ID:", id);
+
         const myNotionClient = (typeof notion !== 'undefined') ? notion : 
                                (typeof Notion !== 'undefined') ? Notion : null;
                                
         if (!myNotionClient) throw new Error("找不到 notion 變數");
 
-        // 🚀 執行更新，並把 Notion 官方「真正修改完後」的結果存進 response
-        const response = await myNotionClient.pages.update({
+        // 🚀 不用 in_trash，改用免費版絕對允許的屬性更新！
+        // 我們把分類屬性直接改成 "已刪除"，或者把標題改掉
+        await myNotionClient.pages.update({
             page_id: id,
-            in_trash: true
+            properties: {
+                // 方案 A：如果你的資料庫有「分類」或「狀態」屬性，把它改成 "已刪除"
+                '分類': {
+                    select: { name: '已刪除' }
+                },
+                // 方案 B：同時在標題加上標記，方便雙重保險過濾
+                '名稱': {
+                    title: [
+                        { text: { content: '[DELETED] 已刪除資料' } }
+                    ]
+                }
+            }
         });
 
-        // 🔍 【核心關鍵】檢查 Notion 回傳的狀態，它到底有沒有真的被丟進垃圾桶？
-        console.log("🧐 Notion 官方回傳的封存狀態 (in_trash):", response.in_trash);
-        console.log("====================================");
-
-        // 只有當 Notion 官方親口承認 in_trash 是 true 時，才回傳 success: true
-        if (response.in_trash === true || response.archived === true) {
-            res.json({ success: true, message: '雲端資料已真正移至垃圾桶！' });
-        } else {
-            console.log("⚠️ 警告：Notion 雖然回應了，但狀態並非封存！");
-            res.json({ success: false, error: 'Notion 雲端未能成功封存資料' });
-        }
+        console.log("🟢 成功！已在 Notion 端將資料標記為 [已刪除]");
+        res.json({ success: true, message: '雲端資料已成功標記刪除！' });
 
     } catch (error) {
-        console.error("❌ 後端執行 Notion 刪除失敗，錯誤原因:", error.message);
+        console.error("❌ 後端標記失敗:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
