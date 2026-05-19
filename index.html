@@ -595,11 +595,64 @@
     </div>
 
     <script>
-        // --- 狀態宣告 (State) ---
-        let items = JSON.parse(localStorage.getItem('lifelog_items')) || [];
-        let currentFilter = 'All'; // 'All' | '展覽' | '景點' | '美食' | '店家'
-        let itemToDelete = null;   // 當前選取欲刪除項目之 ID
-        let currentSort = 'newest'; // 預設：最新最前 'newest' | 'oldest' | 'region'
+       // ==========================================================
+// 🛡️ 狀態宣告 (State) - 升級為純雲端，斷開本機殭屍快取
+// ==========================================================
+let items = []; // 初始化為乾淨的空陣列
+let currentFilter = 'All'; // 'All' | '展覽' | '景點' | '美食' | '店家'
+let itemToDelete = null;   // 當前選取欲刪除項目之 ID
+let currentSort = 'newest'; // 預設：最新最前 'newest'
+
+// ==========================================================
+// 🚀 核心大腦：去 Render 幫 items 變數注入 Notion 活資料
+// ==========================================================
+async function loadNotionCloudData() {
+    try {
+        console.log("🎬 開始與 Notion 雲端同步...");
+        
+        // 1. 正式向你成功的四盒子後端要資料
+        const response = await fetch('https://fourbox.onrender.com/api/notion');
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            // 2. 移花接木魔法：把 Notion 撈回來的多筆資料，全自動翻譯並填入你原本的 items 陣列中
+            items = result.data.map(item => {
+                return {
+                    id: item.id,
+                    title: item.title,
+                    category: item.category === '未分類' ? '展覽' : item.category, // 安全防呆：如果沒分類就先歸到展覽
+                    // 全自動欄位對齊：完美適應你原本網頁不同手帳分類的欄位設計
+                    exhibitionRegion: item.region, exhibitionAddress: item.address, exhibitionTime: item.time, exhibitionTicket: item.ticket, exhibitionNotes: item.notes,
+                    attractionRegion: item.region, attractionAddress: item.address, attractionTime: item.time, attractionTicket: item.ticket, attractionNotes: item.notes,
+                    foodRegion: item.region, foodAddress: item.address, foodTime: item.time, foodClosed: item.holiday, foodNotes: item.notes,
+                    storeRegion: item.region, storeAddress: item.address, storeTime: item.time, storeNotes: item.notes,
+                    timestamp: Date.now() // 給予它一個新鮮的時間戳記
+                };
+            });
+
+            // 3. 徹底清空手機本地舊殭屍快取，永絕後患
+            localStorage.clear();
+
+            // 4. 🚀 【最關鍵的核心】直接呼叫你網頁原本用來「把 items 畫在畫面上」的那個函數！
+            // 根據你網頁原先的設計，它通常會叫做 renderItems()
+            if (typeof renderItems === 'function') {
+                renderItems(); 
+                console.log("🎉 雲端卡片已透過原本的排版引擎完美畫在畫面上！");
+            } else {
+                console.log("⚠️ 找不到 renderItems 函數，請檢查你原本用來刷新畫面的 function 叫什麼名字。");
+            }
+        }
+    } catch (error) {
+        console.error("❌ 雲端讀取發生錯誤:", error);
+    }
+}
+
+// ==========================================================
+// ⏰ 自動執行：只要網頁一打開，骨架就緒後，立刻自動執行雲端讀取
+// ==========================================================
+window.addEventListener('DOMContentLoaded', () => {
+    loadNotionCloudData();
+});
 
         // 分類對應圖示
         const categoryIcons = {
@@ -1485,71 +1538,6 @@
             renderItems();
         }
     </script>
- <script>
-async function loadNotionData() {
-   localStorage.clear(); 
-    if (typeof items !== 'undefined') items = []; 
-
-    const listContainer = document.getElementById('diaryList') || 
-                          document.getElementById('cardsContainer') ||
-    const listContainer = document.getElementById('diaryList') || 
-                          document.getElementById('cardsContainer') || 
-                          document.getElementById('items-grid') ||
-                          document.querySelector('.flex.flex-col.items-center.justify-center.py-20') ||
-                          document.body.querySelector('main') || 
-                          document.body; // 最壞打算直接塞進網頁主體
-
-    try {
-        // 1. 為了防止它一直卡在轉圈圈，我們先清空畫面，直接準備畫卡片！
-        listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#a8a29e; font-family:serif; width:100%;">📜 正在將 Notion 的 ' + ' 筆回憶搬移至舞台...</div>';
-
-        // 2. 🚀 請記得把底下的網址改成你真正的 Render 網址（也就是你剛剛複製出這串資料的那個網址！）
-        const response = await fetch('https://fourbox.onrender.com/api/notion'); 
-        const result = await response.json();
-        
-        if (result.success && result.data) {
-            const cloudData = result.data;
-            
-            // 關鍵動作：清空原本不論是白紙、Demo 資料還是轉圈圈提示
-            listContainer.innerHTML = ''; 
-
-            if (cloudData.length === 0) {
-                listContainer.innerHTML = '<div style="text-align:center; padding:40px; color:#a8a29e; font-family:serif;">這兒還是一張白紙</div>';
-                return;
-            }
-
-            // 3. 有資料！直接把剛剛那串 66666, 55555, 22222, 11111 變成超美文青卡片！
-            cloudData.forEach(item => {
-                const cardHtml = `
-                    <div style="background: white; border-radius: 1rem; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); border: 1px solid rgba(231,229,228,0.5); font-family: serif; text-align: left; width: 100%; max-w: 400px; margin-left: auto; margin-right: auto;">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-                            <h4 style="font-weight: bold; color: #44403c; margin: 0; font-size: 1rem;">${item.title}</h4>
-                            <span style="font-size: 10px; background: #f5f5f4; color: #78716c; padding: 2px 8px; border-radius: 9999px;">${item.category}</span>
-                        </div>
-                        <div style="font-size: 12px; color: #78716c; line-height: 1.6;">
-                            ${item.region || item.address ? `<p style="margin: 3px 0;">📍 <strong>地點：</strong>[${item.region}] ${item.address}</p>` : ''}
-                            ${item.time ? `<p style="margin: 3px 0;">🕒 <strong>時間：</strong>${item.time}</p>` : ''}
-                            ${item.holiday ? `<p style="margin: 3px 0; color: #dc2626;">❌ <strong>公休：</strong>${item.holiday}</p>` : ''}
-                            ${item.ticket ? `<p style="margin: 3px 0;">🎫 <strong>門票：</strong>${item.ticket}</p>` : ''}
-                            ${item.notes ? `<div style="margin-top: 8px; padding-top: 8px; border-t: 1px solid #f5f5f4; color: #57534e; font-style: italic;">📝 ${item.notes}</div>` : ''}
-                        </div>
-                    </div>
-                `;
-                listContainer.insertAdjacentHTML('beforeend', cardHtml);
-            });
-            console.log("📜 成功在畫面上渲染了 " + cloudData.length + " 筆 Notion 卡片！");
-        }
-    } catch (error) {
-        console.error("網頁讀取雲端資料失敗:", error);
-        listContainer.innerHTML = '<div style="text-align:center; padding:20px; color:#a8a29e;">❌ 同步失敗，請重新整理網頁。</div>';
-    }
-}
-
-// 網頁完全載入後，自動執行撈雲端資料
-window.addEventListener('load', () => {
-    // 延遲 500 毫秒執行，確保你原本網頁的排版引擎全部就緒，絕對不撞車
-    setTimeout(loadNotionData, 500);
-});
 </script>   
 </body>
 </html>
