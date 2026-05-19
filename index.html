@@ -1314,13 +1314,6 @@
                 timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
             };
 
-// === 建立乾淨新物件 (你原本的那段) ===
-            const newItem = {
-                id: id || 'item-' + Date.now().toString(),
-                title: title,
-                category: category,
-                timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
-            };
 
             // ==========================================================
             // 🚀 【請在下面直接無痛接上這段：強行噴射到 Render + 重新整理】
