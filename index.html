@@ -1548,17 +1548,12 @@ function executeDelete() {
         .then(data => {
             if (data.success) {
                 console.log("🟢 雲端標記成功！");
-                
-                // 📜 清空本地舊快取
                 localStorage.clear();
-
-                // ⏱️ 給 Notion 雲端 1 秒鐘開工，然後默默在背景刷新，不重新整理網頁！
                 setTimeout(() => {
                     loadNotionCloudData(); // 默默在背景拉取最新乾淨的清單
                     isDeleting = false;    // 解除鎖定
-                    console.log("🔄 雲端快照刷新完畢，這筆資料永遠不顯示。");
+                    console.log("🔄 雲端快照刷新完畢。");
                 }, 1000);
-
             } else {
                 console.error("雲端刪除失敗:", data.error);
                 isDeleting = false;
