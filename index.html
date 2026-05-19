@@ -615,18 +615,26 @@ async function loadNotionCloudData() {
         const result = await response.json();
         
         if (result.success && result.data) {
-            // 2. 移花接木魔法：把 Notion 撈回來的多筆資料，全自動翻譯並填入你原本的 items 陣列中
-            items = result.data.map(item => {
+            
+            // =================================================================
+            // 🎯 【黑客遮眼過濾網】先過濾，再翻譯！
+            // 只要 Notion 傳回來的卡片 status 欄位等於 'deleted'，直接擋在門外！
+            // =================================================================
+            const activeData = result.data.filter(item => item.status !== 'deleted');
+
+            // 2. 移花接木魔法：把沒有被刪除的乾淨資料（activeData）翻譯並填入 items
+            items = activeData.map(item => {
                 return {
                     id: item.id,
                     title: item.title,
-                    category: item.category === '未分類' ? '展覽' : item.category, // 安全防呆：如果沒分類就先歸到展覽
+                    category: item.category === '未分類' ? '展覽' : item.category, 
+                    
                     // 全自動欄位對齊：完美適應你原本網頁不同手帳分類的欄位設計
                     exhibitionRegion: item.region, exhibitionAddress: item.address, exhibitionTime: item.time, exhibitionTicket: item.ticket, exhibitionNotes: item.notes,
                     attractionRegion: item.region, attractionAddress: item.address, attractionTime: item.time, attractionTicket: item.ticket, attractionNotes: item.notes,
                     foodRegion: item.region, foodAddress: item.address, foodTime: item.time, foodClosed: item.holiday, foodNotes: item.notes,
                     storeRegion: item.region, storeAddress: item.address, storeTime: item.time, storeNotes: item.notes,
-                    timestamp: Date.now() // 給予它一個新鮮的時間戳記
+                    timestamp: Date.now() 
                 };
             });
 
@@ -634,7 +642,6 @@ async function loadNotionCloudData() {
             localStorage.clear();
 
             // 4. 🚀 【最關鍵的核心】直接呼叫你網頁原本用來「把 items 畫在畫面上」的那個函數！
-            // 根據你網頁原先的設計，它通常會叫做 renderItems()
             if (typeof renderItems === 'function') {
                 renderItems(); 
                 console.log("🎉 雲端卡片已透過原本的排版引擎完美畫在畫面上！");
