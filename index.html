@@ -789,84 +789,44 @@ async function loadNotionCloudData() {
             });
         }
 
-        function createCardElement(item) {
-            const div = document.createElement('div');
-            div.className = "bg-diary-card rounded-3xl p-5 mb-4 border border-stone-200/50 shadow-soft cursor-pointer hover:shadow-floating transition-all duration-300 active:scale-[0.99] relative";
-            div.onclick = () => openDetailModal(item.id);
-
-            const iconHtml = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
-            
-            // 決定地區標籤內容 (用於卡片右上方)
-            let badgeText = '';
-            if (item.category === '展覽') {
-                badgeText = item.exhibitionRegion || '台北';
-            } else if (item.category === '景點') {
-                badgeText = item.attractionRegion === '國外' && item.attractionRegionSub ? item.attractionRegionSub : (item.attractionRegion || '台北');
-            } else if (item.category === '美食') {
-                badgeText = (item.foodRegion === '高雄' || item.foodRegion === '國外') && item.foodRegionSub ? `${item.foodRegion} • ${item.foodRegionSub}` : (item.foodRegion || '高雄');
-            } else {
-                badgeText = item.storeRegion === '國外' && item.storeRegionSub ? item.storeRegionSub : (item.storeRegion || '台北');
-            }
-
-            // 建立共同 Header 結構 (標籤在名稱上方，標題區pr-20防右上角地區標籤重疊)
-            let headerArea = `
-                <div class="flex items-start justify-between gap-2 mb-3 pr-20">
-                    <div class="flex-1">
-                        <div class="flex items-center gap-1.5 mb-1.5">
-                            <span class="text-xs text-diary-primary/80">${iconHtml}</span>
-                            <span class="text-[10px] font-serif font-bold tracking-widest text-diary-accent uppercase">${item.category}</span>
-                        </div>
-                        <h3 class="font-serif font-bold text-base text-diary-text leading-snug hover:text-diary-primary transition-colors">${item.title}</h3>
-                    </div>
+        // ==========================================================
+        // 🔮 四大分類小卡 HTML 樣板（語法 100% 精準閉合版）
+        // ==========================================================
+        if (item.category === '展覽') {
+            bodyContent = `
+                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-stone-400 text-center"></i>地點：${item.exhibitionLocation || '-'}</div>
+                    ${(item.startDate || item.endDate) ? `
+                    <div class="flex items-center gap-2 text-diary-accent font-bold"><i class="fa-regular fa-calendar w-4 text-stone-400 text-center"></i>展期：${item.startDate || '?'} ~ ${item.endDate || '?'}</div>
+                    ` : ''}
+                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.exhibitionTime || '未註記'}</div>
+                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.exhibitionTicket || '免費'}</div>
                 </div>
-                <!-- 右上方地區懸浮標籤 -->
-                <span class="absolute top-5 right-5 px-2.5 py-1 bg-diary-primary/10 text-diary-primary border border-diary-primary/20 text-[10px] font-serif font-bold rounded-lg tracking-wider flex items-center gap-1 shadow-soft">
-                    <i class="fa-solid fa-location-dot opacity-80 text-[9px]"></i>${badgeText}
-                </span>
             `;
-
-            let bodyContent = '';
-
-          if (item.category === '展覽') {
-                bodyContent = `
-                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                        <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-stone-400 text-center"></i>地點：${item.exhibitionLocation || '-'}</div>
-                        
-                        ${(item.startDate || item.endDate) ? `
-                        <div class="flex items-center gap-2 text-diary-accent font-bold"><i class="fa-regular fa-calendar w-4 text-stone-400 text-center"></i>展期：${item.startDate || '?'} ~ ${item.endDate || '?'}</div>
-                        ` : ''}
-                        
-                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.exhibitionTime || '未註記'}</div>
-                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.exhibitionTicket || '免費'}</div>
-                    </div>
-                `;
-            }
-                `;
-           } else if (item.category === '景點') {
+        } else if (item.category === '景點') {
             bodyContent = `
                 <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
                     <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.attractionTime || '24小時開放'}</div>
                     <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.attractionTicket || '免費'}</div>
                 </div>
-            `; 
-                `;
-            } else if (item.category === '美食') {
-                bodyContent = `
-                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                        <div class="flex items-center gap-2"><i class="fa-solid fa-bowl-food w-4 text-stone-400 text-center"></i>總類：${item.foodType || '其他'}</div>
-                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.foodTime || '無資料'}</div>
-                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.foodClosed || '無特別註記'}</div>
-                    </div>
-                `;
-            } else {
-                // 店家 (與美食/景點統一的文青乾淨卡片樣式，新增公休日顯示)
-                bodyContent = `
-                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.storeTime || '無資料'}</div>
-                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.storeClosed || '無特別註記'}</div>
-                    </div>
-                `;
-            }
+            `;
+        } else if (item.category === '美食') {
+            bodyContent = `
+                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                    <div class="flex items-center gap-2"><i class="fa-solid fa-bowl-food w-4 text-stone-400 text-center"></i>種類：${item.foodType || '其他'}</div>
+                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.foodTime || '無資料'}</div>
+                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.foodClosed || '無特別註記'}</div>
+                </div>
+            `;
+        } else {
+            bodyContent = `
+                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.storeTime || '無資料'}</div>
+                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.storeClosed || '無特別註記'}</div>
+                </div>
+            `;
+        }
+        // ==========================================================
 
             div.innerHTML = headerArea + bodyContent;
             return div;
