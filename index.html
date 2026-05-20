@@ -619,20 +619,24 @@ async function loadNotionCloudData() {
             const activeData = result.data.filter(item => item.status !== 'deleted');
 
             // 2. 翻譯並填入 items
-            items = activeData.map(item => {
-                return {
-                    id: item.id,
-                    title: item.title,
-                    category: item.category === '未分類' ? '展覽' : item.category, 
-                    status: item.status || 'normal', // 👈 確保前端物件也有保留這個狀態！
-                    
-                    exhibitionRegion: item.region, exhibitionAddress: item.address, exhibitionTime: item.time, exhibitionTicket: item.ticket, exhibitionNotes: item.notes,
-                    attractionRegion: item.region, attractionAddress: item.address, attractionTime: item.time, attractionTicket: item.ticket, attractionNotes: item.notes,
-                    foodRegion: item.region, foodAddress: item.address, foodTime: item.time, foodClosed: item.holiday, foodNotes: item.notes,
-                    storeRegion: item.region, storeAddress: item.address, storeTime: item.time, storeNotes: item.notes,
-                    timestamp: Date.now() 
-                };
-            });
+           items = activeData.map(item => {
+    const displayTime = (item.startDate || item.endDate) 
+        ? `${item.startDate || ''} ~ ${item.endDate || ''}` 
+        : (item.time || '未註記');
+
+    return {
+        id: item.id,
+        title: item.title,
+        category: item.category === '未分類' ? '展覽' : item.category, 
+        status: item.status || 'normal', 
+        
+        exhibitionRegion: item.region, exhibitionAddress: item.address, exhibitionTime: displayTime, exhibitionTicket: item.ticket, exhibitionNotes: item.notes,
+        attractionRegion: item.region, attractionAddress: item.address, attractionTime: displayTime, attractionTicket: item.ticket, attractionNotes: item.notes,
+        foodRegion: item.region, foodAddress: item.address, foodTime: displayTime, foodClosed: item.holiday, foodNotes: item.notes,
+        storeRegion: item.region, storeAddress: item.address, storeTime: displayTime, storeNotes: item.notes,
+        timestamp: Date.now() 
+    };
+});
 
             localStorage.clear();
 
