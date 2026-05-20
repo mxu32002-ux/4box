@@ -1467,16 +1467,16 @@ function executeDelete() {
        // --- Toast 提示功能 ---
         function showToast(msg) {
             const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').textContent = msg;
+            const toastMsg = document.getElementById('toastMsg');
+            if (!toast || !toastMsg) return; // 🛡️ 多加一層防呆，避免找不到元素報錯
+
+            toastMsg.textContent = msg;
             toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
 
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
             }, 2500);
         }
-
-        // 🎯【終極修正】拿掉會洗掉雲端資料的 window.onload，讓網頁只聽 loadNotionCloudData 的指揮！
-        // 🚫 這裡原本的 window.onload 已經被我們安全移除
     </script> 
 </body>
 </html>
