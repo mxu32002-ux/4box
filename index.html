@@ -1374,7 +1374,7 @@ function handleStoreRegionChange() {
     }
 }
 
-// 景點地區下拉二級連動
+// 景點地區下拉二級連動 (之前斷頭的兇手就在這裡，現在完美修復了！)
 function handleAttractionRegionChange() {
     const region = document.getElementById('attractionRegion').value;
     const foreignContainer = document.getElementById('attractionForeignContainer');
@@ -1571,7 +1571,6 @@ function executeDelete() {
     if (itemToDelete) {
         isDeleting = true; 
 
-        // 1. 畫面上立刻藏起來，營造流暢的速度感
         items = items.filter(i => i.id !== itemToDelete);
         if (typeof renderItems === 'function') renderItems(); 
 
@@ -1581,7 +1580,6 @@ function executeDelete() {
 
         console.log("🚀 正在發射標記刪除指令，目標 ID:", itemToDelete);
 
-        // 2. 發射密令給 Render
         fetch(`https://fourbox.onrender.com/api/notion/${itemToDelete}`, {
             method: 'DELETE'
         })
@@ -1593,7 +1591,6 @@ function executeDelete() {
                 setTimeout(() => {
                     loadNotionCloudData(); 
                     isDeleting = false;    
-                    console.log("🔄 雲端快照刷新完畢。");
                 }, 1000);
             } else {
                 console.error("雲端刪除失敗:", data.error);
