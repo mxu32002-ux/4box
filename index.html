@@ -842,12 +842,13 @@ async function loadNotionCloudData() {
                 `;
             }
                 `;
-            } else if (item.category === '景點') {
-                bodyContent = `
-                    <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                        <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.attractionTime || '24小時開放'}</div>
-                        <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.attractionTicket || '免費'}</div>
-                    </div>
+           } else if (item.category === '景點') {
+            bodyContent = `
+                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.attractionTime || '24小時開放'}</div>
+                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.attractionTicket || '免費'}</div>
+                </div>
+            `; 
                 `;
             } else if (item.category === '美食') {
                 bodyContent = `
