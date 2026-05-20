@@ -859,6 +859,9 @@ function createCardElement(item) {
 }
 
 // --- 詳細視窗相關功能 ---
+// ==========================================================
+// 📖 詳細視窗相關功能 (結構完美校正、100% 閉合通關版)
+// ==========================================================
 function openDetailModal(id) {
     const item = items.find(i => i.id === id);
     if (!item) return;
@@ -866,725 +869,292 @@ function openDetailModal(id) {
     // 🎯 綁定刪除真 ID 指針
     itemToDelete = id; 
 
+    // 1. 類別圖示與標頭高亮顯示
     document.getElementById('detailCategoryIcon').innerHTML = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
-}
-
-            document.getElementById('detailCategoryIcon').innerHTML = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
-            
-            // 標頭顯示
-            if (item.category === '美食' && item.foodType) {
-                document.getElementById('detailCategoryTag').textContent = `${item.category} • ${item.foodType}`;
-            } else {
-                document.getElementById('detailCategoryTag').textContent = item.category;
-            }
-            document.getElementById('detailTitle').textContent = item.title;
-
-            // 串接一鍵開啟 Google 地圖
-            const makeMapLink = (addr) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
-
-            const contentDiv = document.getElementById('detailDynamicContent');
-            contentDiv.innerHTML = '';
-
-            let detailHtml = '';
-
-            if (item.category === '展覽') {
-                detailHtml = `
-                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-location-dot text-diary-accent w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">地區 / 地點</span>
-                                <span class="font-bold text-sm text-diary-text">${item.exhibitionRegion} • ${item.exhibitionLocation || '-'}</span>
-                            </div>
-                        </div>
-                        ${item.exhibitionAddress ? `
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
-                                <a href="${makeMapLink(item.exhibitionAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
-                                    <span>${item.exhibitionAddress}</span>
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                                </a>
-                            </div>
-                        </div>` : ''}
-                        <div class="dashed-border my-2"></div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">開始日期</span>
-                                <span class="font-sans font-bold text-stone-700">${item.exhibitionStartDate || '無記載'}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">結束日期</span>
-                                <span class="font-sans font-bold text-stone-700">${item.exhibitionEndDate || '無記載'}</span>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
-                                <span class="font-bold text-stone-700">${item.exhibitionTime || '無資料'}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">門票</span>
-                                <span class="font-bold text-diary-secondary">${item.exhibitionTicket || '免費'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${item.exhibitionVideo ? `
-                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
-                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
-                        </div>
-                        <a href="${item.exhibitionVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
-                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        </a>
-                    </div>` : ''}
-
-                    ${item.exhibitionNotes ? `
-                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
-                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
-                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.exhibitionNotes}</p>
-                    </div>` : ''}
-                `;
-            } else if (item.category === '景點') {
-                let displayRegion = item.attractionRegion;
-                if (item.attractionRegion === '國外' && item.attractionRegionSub) {
-                    displayRegion += ` • ${item.attractionRegionSub}`;
-                }
-
-                detailHtml = `
-                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">景點地區</span>
-                                <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
-                            </div>
-                        </div>
-                        ${item.attractionAddress ? `
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
-                                <a href="${makeMapLink(item.attractionAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
-                                    <span>${item.attractionAddress}</span>
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                                </a>
-                            </div>
-                        </div>` : ''}
-                        <div class="dashed-border my-2"></div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
-                                <span class="font-bold text-stone-700">${item.attractionTime || '全天候開放'}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">門票門檻</span>
-                                <span class="font-bold text-diary-secondary">${item.attractionTicket || '免費'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${item.attractionVideo ? `
-                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
-                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
-                        </div>
-                        <a href="${item.attractionVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
-                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        </a>
-                    </div>` : ''}
-
-                    ${item.attractionNotes ? `
-                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
-                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
-                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.attractionNotes}</p>
-                    </div>` : ''}
-                `;
-            } else if (item.category === '美食') {
-                let displayRegion = item.foodRegion;
-                if (item.foodRegion === '高雄' && item.foodRegionSub) {
-                    displayRegion += ` • ${item.foodRegionSub}`;
-                } else if (item.foodRegion === '國外' && item.foodRegionSub) {
-                    displayRegion += ` • ${item.foodRegionSub}`;
-                }
-
-                detailHtml = `
-                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">美食地區</span>
-                                <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
-                            </div>
-                        </div>
-                        ${item.foodAddress ? `
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
-                                <a href="${makeMapLink(item.foodAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
-                                    <span>${item.foodAddress}</span>
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                                </a>
-                            </div>
-                        </div>` : ''}
-                        <div class="dashed-border my-2"></div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
-                                <span class="font-bold text-stone-700">${item.foodTime || '無資料'}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">固定公休日</span>
-                                <span class="font-bold text-diary-secondary">${item.foodClosed || '無特別註記'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${item.foodVideo ? `
-                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
-                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
-                        </div>
-                        <a href="${item.foodVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
-                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        </a>
-                    </div>` : ''}
-
-                    ${item.foodNotes ? `
-                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
-                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
-                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.foodNotes}</p>
-                    </div>` : ''}
-                `;
-            } else {
-                // 店家 / 專用詳細頁排版 (無喜愛程度，新增地址及營業時間)
-                let displayRegion = item.storeRegion || '台北';
-                if (item.storeRegion === '國外' && item.storeRegionSub) {
-                    displayRegion += ` • ${item.storeRegionSub}`;
-                }
-
-                detailHtml = `
-                    <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">店家地區</span>
-                                <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
-                            </div>
-                        </div>
-                        ${item.storeAddress ? `
-                        <div class="flex items-start gap-3">
-                            <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
-                                <a href="${makeMapLink(item.storeAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
-                                    <span>${item.storeAddress}</span>
-                                    <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                                </a>
-                            </div>
-                        </div>` : ''}
-                        <div class="dashed-border my-2"></div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
-                                <span class="font-sans font-bold text-stone-700">${item.storeTime || '-'}</span>
-                            </div>
-                            <div>
-                                <span class="text-[10px] text-stone-400 font-bold block">固定公休日</span>
-                                <span class="font-bold text-diary-secondary">${item.storeClosed || '無特別註記'}</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    ${item.storeVideo ? `
-                    <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
-                            <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
-                        </div>
-                        <a href="${item.storeVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
-                            點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
-                        </a>
-                    </div>` : ''}
-
-                    ${item.storeNotes ? `
-                    <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
-                        <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
-                        <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.storeNotes}</p>
-                    </div>` : ''}
-                `;
-            }
-
-            contentDiv.innerHTML = detailHtml;
-
-            // 綁定編輯與刪除行為
-            document.getElementById('detailDeleteBtn').onclick = () => confirmDelete(item.id);
-            document.getElementById('detailEditBtn').onclick = () => {
-                closeDetailModal();
-                setTimeout(() => openEditModal(item.id), 250);
-            };
-
-            const modal = document.getElementById('detailModal');
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
-
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.remove('opacity-0');
-                content.classList.remove('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
-            }, 10);
-        }
-
-        function closeDetailModal() {
-            const modal = document.getElementById('detailModal');
-            if (modal.classList.contains('hidden')) return;
-
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
-
-            overlay.classList.add('opacity-0');
-            content.classList.add('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        function openEditModal(id = null) {
-            const modal = document.getElementById('editModal');
-            const titleEl = document.getElementById('modalTitle');
-            const catSelect = document.getElementById('itemCategory');
-
-            // 1. 初始化欄位重置
-            document.getElementById('itemId').value = '';
-            document.getElementById('itemTitle').value = '';
-            catSelect.value = '展覽';
-
-            // 展覽專屬欄位重置
-            document.getElementById('exhibitionRegion').value = '台北';
-            document.getElementById('exhibitionLocation').value = '';
-            document.getElementById('exhibitionAddress').value = '';
-            document.getElementById('exhibitionStartDate').value = '';
-            document.getElementById('exhibitionEndDate').value = '';
-            document.getElementById('exhibitionTime').value = '';
-            document.getElementById('exhibitionTicket').value = '';
-            document.getElementById('exhibitionVideo').value = '';
-            document.getElementById('exhibitionNotes').value = '';
-
-            // 景點專屬欄位重置
-            document.getElementById('attractionRegion').value = '台北';
-            document.getElementById('attractionRegionForeign').value = '日本';
-            document.getElementById('attractionAddress').value = '';
-            document.getElementById('attractionTime').value = '';
-            document.getElementById('attractionTicket').value = '';
-            document.getElementById('attractionVideo').value = '';
-            document.getElementById('attractionNotes').value = '';
-
-            // 美食專屬欄位重置
-            document.getElementById('foodType').value = '日式';
-            document.getElementById('foodRegion').value = '高雄';
-            document.getElementById('foodRegionKaohsiung').value = '鹽埕區';
-            document.getElementById('foodRegionForeign').value = '日本';
-            document.getElementById('foodAddress').value = '';
-            document.getElementById('foodTime').value = '';
-            document.getElementById('foodClosed').value = '';
-            document.getElementById('foodVideo').value = '';
-            document.getElementById('foodNotes').value = '';
-
-            // 通用店家欄位重置 (已移除星級評分，新增地址與營業時間、影片)
-            document.getElementById('itemRegion').value = '台北';
-            document.getElementById('itemRegionForeign').value = '日本';
-            document.getElementById('storeAddress').value = '';
-            document.getElementById('storeTime').value = '';
-            document.getElementById('storeClosed').value = '';
-            document.getElementById('storeVideo').value = '';
-            document.getElementById('storeNotes').value = '';
-
-            // 2. 當為「編輯項目」時
-            if (id) {
-                titleEl.textContent = '編修回憶手札';
-                const item = items.find(i => i.id === id);
-                if (item) {
-                    document.getElementById('itemId').value = item.id;
-                    document.getElementById('itemTitle').value = item.title;
-                    catSelect.value = item.category;
-
-                    if (item.category === '展覽') {
-                        document.getElementById('exhibitionRegion').value = item.exhibitionRegion || '台北';
-                        document.getElementById('exhibitionLocation').value = item.exhibitionLocation || '';
-                        document.getElementById('exhibitionAddress').value = item.exhibitionAddress || '';
-                        document.getElementById('exhibitionStartDate').value = item.exhibitionStartDate || '';
-                        document.getElementById('exhibitionEndDate').value = item.exhibitionEndDate || '';
-                        document.getElementById('exhibitionTime').value = item.exhibitionTime || '';
-                        document.getElementById('exhibitionTicket').value = item.exhibitionTicket || '';
-                        document.getElementById('exhibitionVideo').value = item.exhibitionVideo || '';
-                        document.getElementById('exhibitionNotes').value = item.exhibitionNotes || '';
-                    } else if (item.category === '景點') {
-                        document.getElementById('attractionRegion').value = item.attractionRegion || '台北';
-                        document.getElementById('attractionRegionForeign').value = item.attractionRegionSub || '日本';
-                        document.getElementById('attractionAddress').value = item.attractionAddress || '';
-                        document.getElementById('attractionTime').value = item.attractionTime || '';
-                        document.getElementById('attractionTicket').value = item.attractionTicket || '';
-                        document.getElementById('attractionVideo').value = item.attractionVideo || '';
-                        document.getElementById('attractionNotes').value = item.attractionNotes || '';
-                    } else if (item.category === '美食') {
-                        document.getElementById('foodType').value = item.foodType || '日式';
-                        document.getElementById('foodRegion').value = item.foodRegion || '高雄';
-                        if (item.foodRegion === '高雄') {
-                            document.getElementById('foodRegionKaohsiung').value = item.foodRegionSub || '鹽埕區';
-                        } else if (item.foodRegion === '國外') {
-                            document.getElementById('foodRegionForeign').value = item.foodRegionSub || '日本';
-                        }
-                        document.getElementById('foodAddress').value = item.foodAddress || '';
-                        document.getElementById('foodTime').value = item.foodTime || '';
-                        document.getElementById('foodClosed').value = item.foodClosed || '';
-                        document.getElementById('foodVideo').value = item.foodVideo || '';
-                        document.getElementById('foodNotes').value = item.foodNotes || '';
-                    } else {
-                        document.getElementById('itemRegion').value = item.storeRegion || '台北';
-                        if (item.storeRegion === '國外') {
-                            document.getElementById('itemRegionForeign').value = item.storeRegionSub || '日本';
-                        }
-                        document.getElementById('storeAddress').value = item.storeAddress || '';
-                        document.getElementById('storeTime').value = item.storeTime || '';
-                        document.getElementById('storeClosed').value = item.storeClosed || '';
-                        document.getElementById('storeVideo').value = item.storeVideo || '';
-                        document.getElementById('storeNotes').value = item.storeNotes || '';
-                    }
-                }
-            } else {
-                titleEl.textContent = '撰寫新手記';
-                // 依當前 Bottom Navigation 切換，自動代入預設分類
-                if (currentFilter !== 'All') {
-                    catSelect.value = currentFilter;
-                }
-            }
-
-            updateFormFieldsVisibility();
-
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
-
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.remove('opacity-0');
-                content.classList.remove('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
-            }, 10);
-        }
-
-        function closeEditModal() {
-            const modal = document.getElementById('editModal');
-            if (modal.classList.contains('hidden')) return;
-
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
-
-            overlay.classList.add('opacity-0');
-            content.classList.add('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-            }, 300);
-        }
-
-        // 動態表單可見度處理 (Conditional Form Fields)
-        function updateFormFieldsVisibility() {
-            const category = document.getElementById('itemCategory').value;
-            
-            // 全隱藏
-            document.getElementById('exhibitionFields').classList.add('hidden');
-            document.getElementById('attractionFields').classList.add('hidden');
-            document.getElementById('foodFields').classList.add('hidden');
-            document.getElementById('defaultFields').classList.add('hidden');
-
-            // 根據選定類別，展開對應
-            if (category === '展覽') {
-                document.getElementById('exhibitionFields').classList.remove('hidden');
-            } else if (category === '景點') {
-                document.getElementById('attractionFields').classList.remove('hidden');
-                handleAttractionRegionChange();
-            } else if (category === '美食') {
-                document.getElementById('foodFields').classList.remove('hidden');
-                handleFoodRegionChange();
-            } else {
-                document.getElementById('defaultFields').classList.remove('hidden');
-                handleStoreRegionChange();
-            }
-        }
-
-        // 店家地區下拉二級連動
-        function handleStoreRegionChange() {
-            const region = document.getElementById('itemRegion').value;
-            const foreignContainer = document.getElementById('storeForeignContainer');
-            if (region === '國外') {
-                foreignContainer.classList.remove('hidden');
-            } else {
-                foreignContainer.classList.add('hidden');
-            }
-        }
-
-        // 景點地區下拉二級連動
-        function handleAttractionRegionChange() {
-            const region = document.getElementById('attractionRegion').value;
-            const foreignContainer = document.getElementById('attractionForeignContainer');
-            if (region === '國外') {
-                foreignContainer.classList.remove('hidden');
-            } else {
-                foreignContainer.classList.add('hidden');
-            }
-        }
-
-        // 美食地區下拉二級連動
-        function handleFoodRegionChange() {
-            const region = document.getElementById('foodRegion').value;
-            const kaohsiungContainer = document.getElementById('foodKaohsiungContainer');
-            const foreignContainer = document.getElementById('foodForeignContainer');
-
-            kaohsiungContainer.classList.add('hidden');
-            foreignContainer.classList.add('hidden');
-
-            if (region === '高雄') {
-                kaohsiungContainer.classList.remove('hidden');
-            } else if (region === '國外') {
-                foreignContainer.classList.remove('hidden');
-            }
-        }
-
-function saveItem() {
-    const titleInput = document.getElementById('itemTitle');
-    const title = titleInput.value.trim();
-
-    if (!title) {
-        titleInput.classList.add('border-red-400', 'bg-red-50');
-        showToast('請填寫手記名稱 ✍️');
-        setTimeout(() => {
-            titleInput.classList.remove('border-red-400', 'bg-red-50');
-        }, 1200);
-        return;
-    }
-
-    const id = document.getElementById('itemId').value;
-    const category = document.getElementById('itemCategory').value;
-
-    // 建立乾淨新物件
-    const newItem = {
-        id: id || 'item-' + Date.now().toString(),
-        title: title,
-        category: category,
-        timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
-    };
-
-    // 寫入各分類特殊欄位
-    if (category === '展覽') {
-        newItem.exhibitionRegion = document.getElementById('exhibitionRegion').value;
-        newItem.exhibitionLocation = document.getElementById('exhibitionLocation').value.trim();
-        newItem.exhibitionAddress = document.getElementById('exhibitionAddress').value.trim();
-        newItem.exhibitionStartDate = document.getElementById('exhibitionStartDate').value;
-        newItem.exhibitionEndDate = document.getElementById('exhibitionEndDate').value;
-        newItem.exhibitionTime = document.getElementById('exhibitionTime').value.trim();
-        newItem.exhibitionTicket = document.getElementById('exhibitionTicket').value.trim();
-        newItem.exhibitionVideo = document.getElementById('exhibitionVideo').value.trim();
-        newItem.exhibitionNotes = document.getElementById('exhibitionNotes').value.trim();
-    } else if (category === '景點') {
-        newItem.attractionRegion = document.getElementById('attractionRegion').value;
-        if (newItem.attractionRegion === '國外') {
-            newItem.attractionRegionSub = document.getElementById('attractionRegionForeign').value;
-        } else {
-            newItem.attractionRegionSub = '';
-        }
-        newItem.attractionAddress = document.getElementById('attractionAddress').value.trim();
-        newItem.attractionTime = document.getElementById('attractionTime').value.trim();
-        newItem.attractionTicket = document.getElementById('attractionTicket').value.trim();
-        newItem.attractionVideo = document.getElementById('attractionVideo').value.trim();
-        newItem.attractionNotes = document.getElementById('attractionNotes').value.trim();
-    } else if (category === '美食') {
-        newItem.foodType = document.getElementById('foodType').value;
-        newItem.foodRegion = document.getElementById('foodRegion').value;
-        if (newItem.foodRegion === '高雄') {
-            newItem.foodRegionSub = document.getElementById('foodRegionKaohsiung').value;
-        } else if (newItem.foodRegion === '國外') {
-            newItem.foodRegionSub = document.getElementById('foodRegionForeign').value;
-        } else {
-            newItem.foodRegionSub = '';
-        }
-        newItem.foodAddress = document.getElementById('foodAddress').value.trim();
-        newItem.foodTime = document.getElementById('foodTime').value.trim();
-        newItem.foodClosed = document.getElementById('foodClosed').value.trim();
-        newItem.foodVideo = document.getElementById('foodVideo').value.trim();
-        newItem.foodNotes = document.getElementById('foodNotes').value.trim();
-    } else {
-        newItem.storeRegion = document.getElementById('itemRegion').value;
-        if (newItem.storeRegion === '國外') {
-            newItem.storeRegionSub = document.getElementById('itemRegionForeign').value;
-        } else {
-            newItem.storeRegionSub = '';
-        }
-        newItem.storeAddress = document.getElementById('storeAddress').value.trim();
-        newItem.storeTime = document.getElementById('storeTime').value.trim();
-        newItem.storeClosed = document.getElementById('storeClosed').value.trim();
-        newItem.storeVideo = document.getElementById('storeVideo').value.trim();
-        newItem.storeNotes = document.getElementById('storeNotes').value.trim();
-    }
-
-    // 1. 將本地方言欄位轉換為後端需要的標準對齊名稱
-    const payload = {
-        name: newItem.title,
-        category: newItem.category,
-        mainRegion: newItem.exhibitionRegion || newItem.attractionRegion || newItem.foodRegion || newItem.storeRegion || '',
-        subRegion: newItem.exhibitionLocation || newItem.attractionRegionSub || newItem.foodRegionSub || newItem.storeRegionSub || '',
-        address: newItem.exhibitionAddress || newItem.attractionAddress || newItem.foodAddress || newItem.storeAddress || '',
-        openTime: newItem.exhibitionTime || newItem.attractionTime || newItem.foodTime || newItem.storeTime || '',
-        offDay: newItem.foodClosed || newItem.storeClosed || '',
-        ticketInfo: newItem.exhibitionTicket || newItem.attractionTicket || '',
-        foodType: newItem.foodType || '',
-        startDate: newItem.exhibitionStartDate || '',
-        endDate: newItem.exhibitionEndDate || '',
-        videoUrl: newItem.exhibitionVideo || newItem.attractionVideo || newItem.foodVideo || newItem.storeVideo || '',
-        note: newItem.exhibitionNotes || newItem.attractionNotes || newItem.foodNotes || newItem.storeNotes || ''
-    };
-
-    // 🎯 智慧分流判斷門
-    if (id && id.startsWith('item-') === false && id !== '') {
-        // 【分流 A：它是舊資料在編輯】
-        items = items.map(i => i.id === id ? newItem : i);
-        showToast('已妥善更新回憶手帳 ✨');
-        saveToLocal();
-        renderItems();
-        closeEditModal();
-
-        console.log("🔄 [智慧分流] 偵測到編輯行為，在本地覆蓋更新，不發送重複建立請求。");
-        // （註：若之後有做後端更新路由，再把更新 fetch 接在這裡即可）
-
-    } else {
-        // 【分流 B：它是新資料要建立】
-        items.push(newItem);
-        showToast('已將嶄新記憶收藏至手帳中 ✨');
-        saveToLocal();
-        renderItems();
-        closeEditModal();
-
-        console.log("🆕 [智慧分流] 偵測到全新項目，正式同步至 Notion 雲端...");
-
-        fetch('https://fourbox.onrender.com/api/add-note', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.success) {
-                showToast('📜 已同步妥善收藏至 Notion 雲端！');
-                setTimeout(() => { loadNotionCloudData(); }, 1000); // 隔一秒重刷確保最新
-            } else {
-                console.error('Notion 寫入失敗:', data.error);
-                showToast('⚠️ 本地已存，但雲端寫入失敗');
-            }
-        })
-        .catch(err => {
-            console.error('網路連線失敗:', err);
-            showToast('📡 雲端連線失敗，請檢查網路');
-        });
-    }
-}
-
-        // 自訂刪除視窗邏輯
-        function confirmDelete(id) {
-            itemToDelete = id;
-            const modal = document.getElementById('deleteModal');
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
-
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.remove('opacity-0');
-                content.classList.remove('translate-y-10', 'opacity-0');
-            }, 10);
-        }
-
-        function closeDeleteModal() {
-            const modal = document.getElementById('deleteModal');
-            if (modal.classList.contains('hidden')) return;
-
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
-
-            overlay.classList.add('opacity-0');
-            content.classList.add('translate-y-10', 'opacity-0');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                itemToDelete = null;
-            }, 250);
-        }
-
-
-let isDeleting = false; 
-
-function executeDelete() {
-    if (isDeleting) return; 
     
-    if (itemToDelete) {
-        isDeleting = true; 
-
-        // 1. 畫面上立刻藏起來，營造流暢的速度感
-        items = items.filter(i => i.id !== itemToDelete);
-        renderItems(); 
-
-        showToast('已自手帳本中撕去這頁回憶 🍂');
-        closeDeleteModal();
-        closeDetailModal();
-
-        console.log("🚀 [免費相容版] 正在發射標記刪除指令，目標 ID:", itemToDelete);
-
-        // 2. 正式發射密令給 Render
-        fetch(`https://fourbox.onrender.com/api/notion/${itemToDelete}`, {
-            method: 'DELETE'
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                console.log("🟢 雲端標記成功！");
-                localStorage.clear();
-                setTimeout(() => {
-                    loadNotionCloudData(); // 默默在背景拉取最新乾淨的清單
-                    isDeleting = false;    // 解除鎖定
-                    console.log("🔄 雲端快照刷新完畢。");
-                }, 1000);
-            } else {
-                console.error("雲端刪除失敗:", data.error);
-                isDeleting = false;
-                loadNotionCloudData(); // 失敗了就默默拉回來
-                alert("雲端手帳刪除失敗：" + data.error);
-            }
-        })
-        .catch(err => {
-            console.error("嚴重錯誤:", err);
-            isDeleting = false;
-            loadNotionCloudData();
-        });
+    if (item.category === '美食' && item.foodType) {
+        document.getElementById('detailCategoryTag').textContent = `${item.category} • ${item.foodType}`;
+    } else {
+        document.getElementById('detailCategoryTag').textContent = item.category;
     }
-}
-       // --- Toast 提示功能 ---
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').textContent = msg;
-            toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
-            
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
-            }, 2500);
+    document.getElementById('detailTitle').textContent = item.title;
+
+    // 2. 串接一鍵開啟 Google 地圖
+    const makeMapLink = (addr) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
+
+    const contentDiv = document.getElementById('detailDynamicContent');
+    if (contentDiv) contentDiv.innerHTML = '';
+
+    let detailHtml = '';
+
+    // 3. 根據四大分類，灌入最精緻的卡片詳細內容
+    if (item.category === '展覽') {
+        detailHtml = `
+            <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-location-dot text-diary-accent w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">地區 / 地點</span>
+                        <span class="font-bold text-sm text-diary-text">${item.exhibitionRegion || '台北'} • ${item.exhibitionLocation || '-'}</span>
+                    </div>
+                </div>
+                ${item.exhibitionAddress ? `
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                        <a href="${makeMapLink(item.exhibitionAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                            <span>${item.exhibitionAddress}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                        </a>
+                    </div>
+                </div>` : ''}
+                <div class="dashed-border my-2"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">開始日期</span>
+                        <span class="font-sans font-bold text-stone-700">${item.startDate || '無記載'}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">結束日期</span>
+                        <span class="font-sans font-bold text-stone-700">${item.endDate || '無記載'}</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                        <span class="font-bold text-stone-700">${item.exhibitionTime || '無資料'}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">門票</span>
+                        <span class="font-bold text-diary-secondary">${item.exhibitionTicket || '免費'}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${item.exhibitionVideo ? `
+            <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                    <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                </div>
+                <a href="${item.exhibitionVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                    點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </a>
+            </div>` : ''}
+
+            ${item.exhibitionNotes ? `
+            <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.exhibitionNotes}</p>
+            </div>` : ''}
+        `;
+    } else if (item.category === '景點') {
+        let displayRegion = item.attractionRegion || '台北';
+        if (item.attractionRegion === '國外' && item.attractionRegionSub) {
+            displayRegion += ` • ${item.attractionRegionSub}`;
         }
 
-        // 🎯【終極修正】拿掉會洗掉雲端資料的 window.onload，讓網頁只聽 loadNotionCloudData 的指揮！
-        // 🚫 這裡原本的 window.onload 已經被我們安全移除
-    </script> 
-</body>
-</html>
+        detailHtml = `
+            <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">景點地區</span>
+                        <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
+                    </div>
+                </div>
+                ${item.attractionAddress ? `
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                        <a href="${makeMapLink(item.attractionAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                            <span>${item.attractionAddress}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                        </a>
+                    </div>
+                </div>` : ''}
+                <div class="dashed-border my-2"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                        <span class="font-bold text-stone-700">${item.attractionTime || '全天候開放'}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">門票門檻</span>
+                        <span class="font-bold text-diary-secondary">${item.attractionTicket || '免費'}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${item.attractionVideo ? `
+            <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                    <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                </div>
+                <a href="${item.attractionVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                    點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </a>
+            </div>` : ''}
+
+            ${item.attractionNotes ? `
+            <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.attractionNotes}</p>
+            </div>` : ''}
+        `;
+    } else if (item.category === '美食') {
+        let displayRegion = item.foodRegion || '高雄';
+        if ((item.foodRegion === '高雄' || item.foodRegion === '國外') && item.foodRegionSub) {
+            displayRegion += ` • ${item.foodRegionSub}`;
+        }
+
+        detailHtml = `
+            <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">美食地區</span>
+                        <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
+                    </div>
+                </div>
+                ${item.foodAddress ? `
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                        <a href="${makeMapLink(item.foodAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                            <span>${item.foodAddress}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                        </a>
+                    </div>
+                </div>` : ''}
+                <div class="dashed-border my-2"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                        <span class="font-bold text-stone-700">${item.foodTime || '無資料'}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">固定公休日</span>
+                        <span class="font-bold text-diary-secondary">${item.foodClosed || '無特別註記'}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${item.foodVideo ? `
+            <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                    <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                </div>
+                <a href="${item.foodVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                    點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </a>
+            </div>` : ''}
+
+            ${item.foodNotes ? `
+            <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.foodNotes}</p>
+            </div>` : ''}
+        `;
+    } else {
+        let displayRegion = item.storeRegion || '台北';
+        if (item.storeRegion === '國外' && item.storeRegionSub) {
+            displayRegion += ` • ${item.storeRegionSub}`;
+        }
+
+        detailHtml = `
+            <div class="bg-white rounded-3xl p-5 border border-stone-200/40 shadow-soft space-y-3 font-serif text-[12px] text-diary-text">
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-earth-asia text-diary-accent w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">店家地區</span>
+                        <span class="font-bold text-sm text-diary-text">${displayRegion}</span>
+                    </div>
+                </div>
+                ${item.storeAddress ? `
+                <div class="flex items-start gap-3">
+                    <i class="fa-solid fa-map-location-dot text-diary-primary w-4 text-center mt-0.5"></i>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block mb-0.5">詳細地址</span>
+                        <a href="${makeMapLink(item.storeAddress)}" target="_blank" class="text-diary-primary hover:underline font-bold inline-flex items-center gap-1">
+                            <span>${item.storeAddress}</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                        </a>
+                    </div>
+                </div>` : ''}
+                <div class="dashed-border my-2"></div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">營業時間</span>
+                        <span class="font-sans font-bold text-stone-700">${item.storeTime || '-'}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-stone-400 font-bold block">固定公休日</span>
+                        <span class="font-bold text-diary-secondary">${item.storeClosed || '無特別註記'}</span>
+                    </div>
+                </div>
+            </div>
+
+            ${item.storeVideo ? `
+            <div class="bg-diary-primary/5 rounded-2xl p-4 border border-diary-primary/10 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-play text-diary-primary text-lg"></i>
+                    <span class="text-[11px] font-serif font-bold text-stone-700">影片</span>
+                </div>
+                <a href="${item.storeVideo}" target="_blank" class="text-xs bg-diary-primary text-white py-1.5 px-4 rounded-xl shadow-soft font-bold inline-flex items-center gap-1">
+                    點擊播放 <i class="fa-solid fa-chevron-right text-[9px]"></i>
+                </a>
+            </div>` : ''}
+
+            ${item.storeNotes ? `
+            <div class="bg-diary-bg p-5 rounded-3xl border border-diary-light/60">
+                <div class="text-[10px] text-diary-accent font-black tracking-widest uppercase mb-2 flex items-center gap-1.5"><i class="fa-solid fa-quote-left text-xs"></i>備註</div>
+                <p class="text-xs text-stone-600 leading-relaxed whitespace-pre-wrap">${item.storeNotes}</p>
+            </div>` : ''}
+        `;
+    }
+
+    if (contentDiv) contentDiv.innerHTML = detailHtml;
+
+    // 4. 綁定編輯與刪除按鈕點擊行為
+    document.getElementById('detailDeleteBtn').onclick = () => confirmDelete(item.id);
+    document.getElementById('detailEditBtn').onclick = () => {
+        closeDetailModal();
+        setTimeout(() => openEditModal(item.id), 250);
+    };
+
+    // 5. 啟動展開動畫
+    const modal = document.getElementById('detailModal');
+    const overlay = modal.querySelector('.modal-overlay');
+    const content = modal.querySelector('.modal-content');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        if (overlay) overlay.classList.remove('opacity-0');
+        if (content) content.classList.remove('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
+    }, 10);
+} // 👈 openDetailModal 的完美大門關閉！
+
+function closeDetailModal() {
+    const modal = document.getElementById('detailModal');
+    if (!modal || modal.classList.contains('hidden')) return;
+
+    const overlay = modal.querySelector('.modal-overlay');
+    const content = modal.querySelector('.modal-content');
+
+    if (overlay) overlay.classList.add('opacity-0');
+    if (content) content.classList.add('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 300);
+}
+
+// --- Toast 提示功能 ---
+function showToast(msg) {
+    const
