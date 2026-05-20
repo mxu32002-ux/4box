@@ -1379,81 +1379,226 @@ function handleAttractionRegionChange() {
     const region = document.getElementById('attractionRegion').value;
     const foreignContainer = document.getElementById('attractionForeignContainer');
     if (region === '國外') {
-        foreign
+        foreignContainer.classList.remove('hidden');
+    } else {
+        foreignContainer.classList.add('hidden');
+    }
+}
 
-        // 自訂刪除視窗邏輯
-        function confirmDelete(id) {
-            itemToDelete = id;
-            const modal = document.getElementById('deleteModal');
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
+// 美食地區下拉二級連動
+function handleFoodRegionChange() {
+    const region = document.getElementById('foodRegion').value;
+    const kaohsiungContainer = document.getElementById('foodKaohsiungContainer');
+    const foreignContainer = document.getElementById('foodForeignContainer');
 
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                overlay.classList.remove('opacity-0');
-                content.classList.remove('translate-y-10', 'opacity-0');
-            }, 10);
+    kaohsiungContainer.classList.add('hidden');
+    foreignContainer.classList.add('hidden');
+
+    if (region === '高雄') {
+        kaohsiungContainer.classList.remove('hidden');
+    } else if (region === '國外') {
+        foreignContainer.classList.remove('hidden');
+    }
+}
+
+// ==========================================================
+// 💾 儲存與同步核心：完美分流，絕不重複建立！
+// ==========================================================
+function saveItem() {
+    const titleInput = document.getElementById('itemTitle');
+    const title = titleInput.value.trim();
+
+    if (!title) {
+        titleInput.classList.add('border-red-400', 'bg-red-50');
+        showToast('請填寫手記名稱 ✍️');
+        setTimeout(() => { titleInput.classList.remove('border-red-400', 'bg-red-50'); }, 1200);
+        return;
+    }
+
+    const id = currentEditId || document.getElementById('itemId').value;
+    const category = document.getElementById('itemCategory').value;
+
+    const newItem = {
+        id: id || 'item-' + Date.now().toString(),
+        title: title,
+        category: category,
+        timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
+    };
+
+    if (category === '展覽') {
+        newItem.exhibitionRegion = document.getElementById('exhibitionRegion').value;
+        newItem.exhibitionLocation = document.getElementById('exhibitionLocation').value.trim();
+        newItem.exhibitionAddress = document.getElementById('exhibitionAddress').value.trim();
+        newItem.exhibitionStartDate = document.getElementById('exhibitionStartDate').value;
+        newItem.exhibitionEndDate = document.getElementById('exhibitionEndDate').value;
+        newItem.exhibitionTime = document.getElementById('exhibitionTime').value.trim();
+        newItem.exhibitionTicket = document.getElementById('exhibitionTicket').value.trim();
+        newItem.exhibitionVideo = document.getElementById('exhibitionVideo').value.trim();
+        newItem.exhibitionNotes = document.getElementById('exhibitionNotes').value.trim();
+    } else if (category === '景點') {
+        newItem.attractionRegion = document.getElementById('attractionRegion').value;
+        newItem.attractionRegionSub = newItem.attractionRegion === '國外' ? document.getElementById('attractionRegionForeign').value : '';
+        newItem.attractionAddress = document.getElementById('attractionAddress').value.trim();
+        newItem.attractionTime = document.getElementById('attractionTime').value.trim();
+        newItem.attractionTicket = document.getElementById('attractionTicket').value.trim();
+        newItem.attractionVideo = document.getElementById('attractionVideo').value.trim();
+        newItem.attractionNotes = document.getElementById('attractionNotes').value.trim();
+    } else if (category === '美食') {
+        newItem.foodType = document.getElementById('foodType').value;
+        newItem.foodRegion = document.getElementById('foodRegion').value;
+        if (newItem.foodRegion === '高雄') {
+            newItem.foodRegionSub = document.getElementById('foodRegionKaohsiung').value;
+        } else if (newItem.foodRegion === '國外') {
+            newItem.foodRegionSub = document.getElementById('foodRegionForeign').value;
+        } else {
+            newItem.foodRegionSub = '';
         }
+        newItem.foodAddress = document.getElementById('foodAddress').value.trim();
+        newItem.foodTime = document.getElementById('foodTime').value.trim();
+        newItem.foodClosed = document.getElementById('foodClosed').value.trim();
+        newItem.foodVideo = document.getElementById('foodVideo').value.trim();
+        newItem.foodNotes = document.getElementById('foodNotes').value.trim();
+    } else {
+        newItem.storeRegion = document.getElementById('itemRegion').value;
+        newItem.storeRegionSub = newItem.storeRegion === '國外' ? document.getElementById('itemRegionForeign').value : '';
+        newItem.storeAddress = document.getElementById('storeAddress').value.trim();
+        newItem.storeTime = document.getElementById('storeTime').value.trim();
+        newItem.storeClosed = document.getElementById('storeClosed').value.trim();
+        newItem.storeVideo = document.getElementById('storeVideo').value.trim();
+        newItem.storeNotes = document.getElementById('storeNotes').value.trim();
+    }
 
-        function closeDeleteModal() {
-            const modal = document.getElementById('deleteModal');
-            if (modal.classList.contains('hidden')) return;
+    const payload = {
+        name: newItem.title,
+        category: newItem.category,
+        mainRegion: newItem.exhibitionRegion || newItem.attractionRegion || newItem.foodRegion || newItem.storeRegion || '',
+        subRegion: newItem.exhibitionLocation || newItem.attractionRegionSub || newItem.foodRegionSub || newItem.storeRegionSub || '',
+        address: newItem.exhibitionAddress || newItem.attractionAddress || newItem.foodAddress || newItem.storeAddress || '',
+        openTime: newItem.exhibitionTime || newItem.attractionTime || newItem.foodTime || newItem.storeTime || '',
+        offDay: newItem.foodClosed || newItem.storeClosed || '',
+        ticketInfo: newItem.exhibitionTicket || newItem.attractionTicket || '',
+        foodType: newItem.foodType || '',
+        startDate: newItem.exhibitionStartDate || '',
+        endDate: newItem.exhibitionEndDate || '',
+        videoUrl: newItem.exhibitionVideo || newItem.attractionVideo || newItem.foodVideo || newItem.storeVideo || '',
+        note: newItem.exhibitionNotes || newItem.attractionNotes || newItem.foodNotes || newItem.storeNotes || ''
+    };
 
-            const overlay = modal.querySelector('.modal-overlay');
-            const content = modal.querySelector('.modal-content');
+    if (id && id !== '') {
+        items = items.map(i => i.id === id ? newItem : i);
+        showToast('已妥善更新回憶手帳 ✨');
+        if (typeof saveToLocal === 'function') saveToLocal(); 
+        if (typeof renderItems === 'function') renderItems();
 
-            overlay.classList.add('opacity-0');
-            content.classList.add('translate-y-10', 'opacity-0');
-
-            setTimeout(() => {
-                modal.classList.add('hidden');
-                itemToDelete = null;
-            }, 250);
+        if (!id.startsWith('item-')) {
+            console.log("🔄 正在向雲端發送更新密令... ID:", id);
+            fetch(`https://fourbox.onrender.com/api/notion-update/${id}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    setTimeout(() => { loadNotionCloudData(); }, 1000);
+                }
+            })
+            .catch(err => console.error('雲端更新失敗:', err));
         }
+    } else {
+        items.push(newItem);
+        showToast('已將嶄新記憶收藏至手帳中 ✨');
+        if (typeof saveToLocal === 'function') saveToLocal();
+        if (typeof renderItems === 'function') renderItems();
 
+        console.log("🆕 偵測到全新項目，正式同步至 Notion 雲端...");
+        fetch('https://fourbox.onrender.com/api/add-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('📜 已同步妥善收藏至 Notion 雲端！');
+                setTimeout(() => { loadNotionCloudData(); }, 1000);
+            }
+        })
+        .catch(err => console.error('網路連線失敗:', err));
+    }
+
+    currentEditId = null; 
+    closeEditModal();
+}
+
+// ==========================================================
+// 🗑️ 刪除功能與提示視窗
+// ==========================================================
+function confirmDelete(id) {
+    itemToDelete = id;
+    const modal = document.getElementById('deleteModal');
+    const overlay = modal.querySelector('.modal-overlay');
+    const content = modal.querySelector('.modal-content');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        if(overlay) overlay.classList.remove('opacity-0');
+        if(content) content.classList.remove('translate-y-10', 'opacity-0');
+    }, 10);
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    if (!modal || modal.classList.contains('hidden')) return;
+
+    const overlay = modal.querySelector('.modal-overlay');
+    const content = modal.querySelector('.modal-content');
+
+    if(overlay) overlay.classList.add('opacity-0');
+    if(content) content.classList.add('translate-y-10', 'opacity-0');
+
+    setTimeout(() => {
+        modal.classList.add('hidden');
+        itemToDelete = null;
+    }, 250);
+}
 
 let isDeleting = false; 
 
 function executeDelete() {
     if (isDeleting) return; 
-
+    
     if (itemToDelete) {
         isDeleting = true; 
 
         // 1. 畫面上立刻藏起來，營造流暢的速度感
         items = items.filter(i => i.id !== itemToDelete);
-        renderItems(); 
+        if (typeof renderItems === 'function') renderItems(); 
 
         showToast('已自手帳本中撕去這頁回憶 🍂');
         closeDeleteModal();
-        closeDetailModal();
+        if (typeof closeDetailModal === 'function') closeDetailModal();
 
-        console.log("🚀 [免費相容版] 正在發射標記刪除指令，目標 ID:", itemToDelete);
+        console.log("🚀 正在發射標記刪除指令，目標 ID:", itemToDelete);
 
-        // 2. 正式發射密令給 Render
+        // 2. 發射密令給 Render
         fetch(`https://fourbox.onrender.com/api/notion/${itemToDelete}`, {
             method: 'DELETE'
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                console.log("🟢 雲端標記成功！");
-                
-                // 📜 清空本地舊快取
-                localStorage.clear();
-
-                // ⏱️ 給 Notion 雲端 1 秒鐘開工，然後默默在背景刷新，不重新整理網頁！
+                console.log("🟢 雲端標記刪除成功！");
+                if (typeof saveToLocal === 'function') saveToLocal();
                 setTimeout(() => {
-                    loadNotionCloudData(); // 默默在背景拉取最新乾淨的清單
-                    isDeleting = false;    // 解除鎖定
-                    console.log("🔄 雲端快照刷新完畢，這筆資料永遠不顯示。");
+                    loadNotionCloudData(); 
+                    isDeleting = false;    
                     console.log("🔄 雲端快照刷新完畢。");
                 }, 1000);
-
             } else {
                 console.error("雲端刪除失敗:", data.error);
                 isDeleting = false;
-                loadNotionCloudData(); // 失敗了就默默拉回來
+                loadNotionCloudData(); 
                 alert("雲端手帳刪除失敗：" + data.error);
             }
         })
@@ -1464,19 +1609,20 @@ function executeDelete() {
         });
     }
 }
-       // --- Toast 提示功能 ---
-        function showToast(msg) {
-            const toast = document.getElementById('toast');
-            const toastMsg = document.getElementById('toastMsg');
-            if (!toast || !toastMsg) return; // 🛡️ 多加一層防呆，避免找不到元素報錯
 
-            toastMsg.textContent = msg;
-            toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+// --- Toast 提示功能 ---
+function showToast(msg) {
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    if (!toast || !toastMsg) return;
 
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
-            }, 2500);
-        }
-    </script> 
+    toastMsg.textContent = msg;
+    toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+    }, 2500);
+}
+</script> 
 </body>
 </html>
