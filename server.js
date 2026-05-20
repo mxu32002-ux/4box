@@ -189,10 +189,15 @@ app.listen(PORT, () => {
 });
 
 // === 🎯 從 Notion 讀取所有手帳資料（已對齊分類與日期格式） ===
+// === 🎯 從 Notion 讀取所有手帳資料（與雲端資料庫欄位 100% 絕對對齊版） ===
 app.get('/api/notion', async (req, res) => {
     try {
         const databaseId = process.env.NOTION_DATABASE_ID;
         
+        if (!databaseId) {
+            return res.status(500).json({ success: false, error: '尚未設定 DATABASE_ID' });
+        }
+
         // 向 Notion 查詢資料
         const response = await notion.databases.query({
             database_id: databaseId,
@@ -204,37 +209,41 @@ app.get('/api/notion', async (req, res) => {
             ]
         });
 
-        // 轉譯資料格式
+        // 🎯 這裡的翻譯箱，必須跟你的 Notion 資料庫欄位名稱完全一模一樣！
         const items = response.results.map(page => {
             const props = page.properties;
             return {
                 id: page.id,
                 title: props['名稱']?.title[0]?.plain_text || '未命名',
                 
-                // 🛡️【終極對齊】把原本的 '類別' 修正為 '分類'！
+                // 🛡️【關鍵核心對齊】確保讀取的是「分類」欄位，而不是「類別」
                 category: props['分類']?.select?.name || '未分類',
                 
-                region: props['主要地區']?.select?.name || props['主要地區']?.rich_text[0]?.plain_text || '',
+                // 🎯 地區與地點局部對齊
+                region: props['主要地區']?.select?.name || '',
+                subRegion: props['細分地區/地點']?.rich_text[0]?.plain_text || '',
+                
                 address: props['詳細地址']?.rich_text[0]?.plain_text || '',
                 time: props['營業/開放時間']?.rich_text[0]?.plain_text || '',
                 holiday: props['固定公休日']?.rich_text[0]?.plain_text || '',
                 ticket: props['門票/票券資訊']?.rich_text[0]?.plain_text || '',
                 notes: props['隨手札記備註']?.rich_text[0]?.plain_text || '',
                 
-                // 🎯 精準抽取 Notion 的「開始日期」與「結束日期」，並做好安全防呆
+                // 📅 日期安全防呆抽取
                 startDate: props['開始日期']?.date?.start || '',
                 endDate: props['結束日期']?.date?.start || '',
                 
-                // 🛡️ 超級安全防呆：預設給它 'normal'
+                // 🎬 影片連結與狀態防呆
+                videoUrl: props['影片連結']?.url || '',
                 status: (props['status'] && props['status'].select && props['status'].select.name) ? props['status'].select.name : 'normal'
             };
         });
 
-        // 成功回傳
+        // 成功打包送回前端網頁
         res.json({ success: true, data: items });
 
     } catch (error) {
-        console.error("Notion 讀取失敗:", error);
+        console.error("❌ Notion 雲端讀取失敗，詳細日誌:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
