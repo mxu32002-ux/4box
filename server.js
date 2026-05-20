@@ -129,6 +129,10 @@ return {
     ticket: props['門票/票券資訊']?.rich_text[0]?.plain_text || '',
     notes: props['隨手札記備註']?.rich_text[0]?.plain_text || '',
     
+    // 🎯 【全新加入】精準抽取 Notion 的「開始日期」與「結束日期」，並做好安全防呆
+    startDate: props['開始日期']?.date?.start || '',
+    endDate: props['結束日期']?.date?.start || '',
+    
     // 🛡️ 超級安全防呆：不管 Notion 這一格是空的、不存在、還是打錯字，都絕對不報錯，預設給它 'normal'
     status: (props['status'] && props['status'].select && props['status'].select.name) ? props['status'].select.name : 'normal'
 };
