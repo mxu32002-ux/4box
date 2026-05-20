@@ -188,7 +188,7 @@ app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
 
-// === 新增：從 Notion 讀取所有手帳資料 ===
+// === 🎯 從 Notion 讀取所有手帳資料（已對齊分類與日期格式） ===
 app.get('/api/notion', async (req, res) => {
     try {
         const databaseId = process.env.NOTION_DATABASE_ID;
@@ -207,24 +207,27 @@ app.get('/api/notion', async (req, res) => {
         // 轉譯資料格式
         const items = response.results.map(page => {
             const props = page.properties;
-return {
-    id: page.id,
-    title: props['名稱']?.title[0]?.plain_text || '未命名',
-    category: props['類別']?.select?.name || '未分類',
-    region: props['主要地區']?.select?.name || props['主要地區']?.rich_text[0]?.plain_text || '',
-    address: props['詳細地址']?.rich_text[0]?.plain_text || '',
-    time: props['營業/開放時間']?.rich_text[0]?.plain_text || '',
-    holiday: props['固定公休日']?.rich_text[0]?.plain_text || '',
-    ticket: props['門票/票券資訊']?.rich_text[0]?.plain_text || '',
-    notes: props['隨手札記備註']?.rich_text[0]?.plain_text || '',
-    
-    // 🎯 【全新加入】精準抽取 Notion 的「開始日期」與「結束日期」，並做好安全防呆
-    startDate: props['開始日期']?.date?.start || '',
-    endDate: props['結束日期']?.date?.start || '',
-    
-    // 🛡️ 超級安全防呆：不管 Notion 這一格是空的、不存在、還是打錯字，都絕對不報錯，預設給它 'normal'
-    status: (props['status'] && props['status'].select && props['status'].select.name) ? props['status'].select.name : 'normal'
-};
+            return {
+                id: page.id,
+                title: props['名稱']?.title[0]?.plain_text || '未命名',
+                
+                // 🛡️【終極對齊】把原本的 '類別' 修正為 '分類'！
+                category: props['分類']?.select?.name || '未分類',
+                
+                region: props['主要地區']?.select?.name || props['主要地區']?.rich_text[0]?.plain_text || '',
+                address: props['詳細地址']?.rich_text[0]?.plain_text || '',
+                time: props['營業/開放時間']?.rich_text[0]?.plain_text || '',
+                holiday: props['固定公休日']?.rich_text[0]?.plain_text || '',
+                ticket: props['門票/票券資訊']?.rich_text[0]?.plain_text || '',
+                notes: props['隨手札記備註']?.rich_text[0]?.plain_text || '',
+                
+                // 🎯 精準抽取 Notion 的「開始日期」與「結束日期」，並做好安全防呆
+                startDate: props['開始日期']?.date?.start || '',
+                endDate: props['結束日期']?.date?.start || '',
+                
+                // 🛡️ 超級安全防呆：預設給它 'normal'
+                status: (props['status'] && props['status'].select && props['status'].select.name) ? props['status'].select.name : 'normal'
+            };
         });
 
         // 成功回傳
@@ -235,6 +238,7 @@ return {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
 // === 🗑️ 免費版相容：更新 status 欄位為 deleted，完美繞過付費牆 ===
 app.delete('/api/notion/:id', async (req, res) => {
     try {
