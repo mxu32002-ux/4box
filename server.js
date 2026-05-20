@@ -109,42 +109,43 @@ app.post('/api/notion-update/:id', async (req, res) => {
 
     console.log(`🔄 [雲端智慧更新] 正在通知 Notion 修改頁面，ID: ${id}`);
 
-    // 🎯 這裡的欄位完全複製你 add-note 的最標準格式，咬合度 100%！
+    // 🎯 完美防禦：Notion 規定 rich_text 裡面不能傳空字串 ""！
+    // 如果沒有值，必須給空陣列 [] 來清空欄位，否則 Notion 會直接報錯導致 500！
     const properties = {
       "名稱": { 
         title: [{ text: { content: name || "未命名隨手記" } }] 
       },
-      "分類": { // 👈 統一對齊叫「分類」！
+      "分類": { 
         select: category ? { name: category } : null 
       },
       "主要地區": { 
         select: mainRegion ? { name: mainRegion } : null 
       },
       "細分地區/地點": { 
-        rich_text: [{ text: { content: subRegion || "" } }] 
+        rich_text: subRegion ? [{ text: { content: subRegion } }] : [] 
       },
       "詳細地址": { 
-        rich_text: [{ text: { content: address || "" } }] 
+        rich_text: address ? [{ text: { content: address } }] : [] 
       },
       "營業/開放時間": { 
-        rich_text: [{ text: { content: openTime || "" } }] 
+        rich_text: openTime ? [{ text: { content: openTime } }] : [] 
       },
       "固定公休日": { 
-        rich_text: [{ text: { content: offDay || "" } }] 
+        rich_text: offDay ? [{ text: { content: offDay } }] : [] 
       },
       "門票/票券資訊": { 
-        rich_text: [{ text: { content: ticketInfo || "" } }] 
+        rich_text: ticketInfo ? [{ text: { content: ticketInfo } }] : [] 
       },
       "隨手札記備註": { 
-        rich_text: [{ text: { content: note || "" } }] 
+        rich_text: note ? [{ text: { content: note } }] : [] 
       }
     };
 
-    // 選填與特殊格式欄位防禦（與你的 add-note 一模一樣）
+    // ⚠️ 注意：我幫你把「總」改成「種」了！如果你的 Notion 真的是叫「美食總類」，請改回總類！
     if (foodType && foodType.trim() !== '') {
-      properties["美食總類"] = { select: { name: foodType } };
+      properties["美食種類"] = { select: { name: foodType } };
     } else {
-      properties["美食總類"] = { select: null }; // 如果清空了就抹除
+      properties["美食種類"] = { select: null }; // 如果清空了就抹除
     }
     
     if (videoUrl && videoUrl.trim() !== '') {
@@ -176,7 +177,8 @@ app.post('/api/notion-update/:id', async (req, res) => {
 
   } catch (error) {
     console.error('❌ Notion 更新失敗，詳細日誌:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    // 💡 把真正的報錯原因印給前端，這樣抓蟲才快！
+    return res.status(500).json({ success: false, error: error.message || error });
   }
 });
 
