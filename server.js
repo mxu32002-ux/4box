@@ -18,12 +18,31 @@ const notion = new Client({
   auth: process.env.NOTION_INTEGRATION_TOKEN
 });
 
+// ==========================================================
+// 🆕 新增卡片到 Notion (Add Note) - 升級防禦版
+// ==========================================================
 app.post('/api/add-note', async (req, res) => {
-  const databaseId = process.env.NOTION_DATABASE_ID;
-  
-  if (!databaseId) {
-    return res.status(500).json({ success: false, error: '尚未設定 DATABASE_ID' });
-  }
+    const databaseId = process.env.NOTION_DATABASE_ID;
+    
+    if (!databaseId) {
+        return res.status(500).json({ success: false, error: '尚未設定 DATABASE_ID' });
+    }
+
+    try {
+        // 使用我們剛剛建立的那個「完美對齊打包機」，確保欄位名稱一模一樣
+        const properties = buildNotionProperties(req.body);
+
+        const response = await notion.pages.create({
+            parent: { database_id: databaseId },
+            properties: properties
+        });
+
+        res.json({ success: true, data: response });
+    } catch (error) {
+        console.error("❌ Notion 新增失敗:", error);
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 
   try {
     const { 
