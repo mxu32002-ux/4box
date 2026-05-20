@@ -1155,6 +1155,135 @@ function closeDetailModal() {
     }, 300);
 }
 
+// ==========================================================
+function openEditModal(id = null) {
+    const modal = document.getElementById('editModal');
+    const titleEl = document.getElementById('modalTitle');
+    const catSelect = document.getElementById('itemCategory');
+
+    if (!modal || !titleEl || !catSelect) return;
+
+    // 1. 初始化所有欄位重置（清空新手札記）
+    document.getElementById('itemId').value = id || '';
+    document.getElementById('itemTitle').value = '';
+    catSelect.value = '展覽';
+
+    // 展覽專屬欄位重置
+    document.getElementById('exhibitionRegion').value = '台北';
+    document.getElementById('exhibitionLocation').value = '';
+    document.getElementById('exhibitionAddress').value = '';
+    document.getElementById('exhibitionStartDate').value = '';
+    document.getElementById('exhibitionEndDate').value = '';
+    document.getElementById('exhibitionTime').value = '';
+    document.getElementById('exhibitionTicket').value = '';
+    document.getElementById('exhibitionVideo').value = '';
+    document.getElementById('exhibitionNotes').value = '';
+
+    // 景點專屬欄位重置
+    document.getElementById('attractionRegion').value = '台北';
+    document.getElementById('attractionRegionForeign').value = '日本';
+    document.getElementById('attractionAddress').value = '';
+    document.getElementById('attractionTime').value = '';
+    document.getElementById('attractionTicket').value = '';
+    document.getElementById('attractionVideo').value = '';
+    document.getElementById('attractionNotes').value = '';
+
+    // 美食專屬欄位重置
+    document.getElementById('foodType').value = '日式';
+    document.getElementById('foodRegion').value = '高雄';
+    document.getElementById('foodRegionKaohsiung').value = '鹽埕區';
+    document.getElementById('foodRegionForeign').value = '日本';
+    document.getElementById('foodAddress').value = '';
+    document.getElementById('foodTime').value = '';
+    document.getElementById('foodClosed').value = '';
+    document.getElementById('foodVideo').value = '';
+    document.getElementById('foodNotes').value = '';
+
+    // 通用店家欄位重置
+    document.getElementById('itemRegion').value = '台北';
+    document.getElementById('itemRegionForeign').value = '日本';
+    document.getElementById('storeAddress').value = '';
+    document.getElementById('storeTime').value = '';
+    document.getElementById('storeClosed').value = '';
+    document.getElementById('storeVideo').value = '';
+    document.getElementById('storeNotes').value = '';
+
+    // 2. 當為「編輯項目」時，精準從全域陣列抓資料回填表單
+    if (id) {
+        titleEl.textContent = '編修回憶手札';
+        const item = items.find(i => i.id === id);
+        if (item) {
+            document.getElementById('itemId').value = item.id;
+            document.getElementById('itemTitle').value = item.title;
+            catSelect.value = item.category;
+
+            if (item.category === '展覽') {
+                document.getElementById('exhibitionRegion').value = item.exhibitionRegion || '台北';
+                document.getElementById('exhibitionLocation').value = item.exhibitionLocation || '';
+                document.getElementById('exhibitionAddress').value = item.exhibitionAddress || '';
+                // 📅 完美抓取我們上一波對齊的獨立開始與結束日期！
+                document.getElementById('exhibitionStartDate').value = item.startDate || '';
+                document.getElementById('exhibitionEndDate').value = item.endDate || '';
+                document.getElementById('exhibitionTime').value = item.exhibitionTime || '';
+                document.getElementById('exhibitionTicket').value = item.exhibitionTicket || '';
+                document.getElementById('exhibitionVideo').value = item.exhibitionVideo || '';
+                document.getElementById('exhibitionNotes').value = item.exhibitionNotes || '';
+            } else if (item.category === '景點') {
+                document.getElementById('attractionRegion').value = item.attractionRegion || '台北';
+                document.getElementById('attractionRegionForeign').value = item.attractionRegionSub || '日本';
+                document.getElementById('attractionAddress').value = item.attractionAddress || '';
+                document.getElementById('attractionTime').value = item.attractionTime || '';
+                document.getElementById('attractionTicket').value = item.attractionTicket || '';
+                document.getElementById('attractionVideo').value = item.attractionVideo || '';
+                document.getElementById('attractionNotes').value = item.attractionNotes || '';
+            } else if (item.category === '美食') {
+                document.getElementById('foodType').value = item.foodType || '日式';
+                document.getElementById('foodRegion').value = item.foodRegion || '高雄';
+                if (item.foodRegion === '高雄') {
+                    document.getElementById('foodRegionKaohsiung').value = item.foodRegionSub || '鹽埕區';
+                } else if (item.foodRegion === '國外') {
+                    document.getElementById('foodRegionForeign').value = item.foodRegionSub || '日本';
+                }
+                document.getElementById('foodAddress').value = item.foodAddress || '';
+                document.getElementById('foodTime').value = item.foodTime || '';
+                document.getElementById('foodClosed').value = item.foodClosed || '';
+                document.getElementById('foodVideo').value = item.foodVideo || '';
+                document.getElementById('foodNotes').value = item.foodNotes || '';
+            } else {
+                document.getElementById('itemRegion').value = item.storeRegion || '台北';
+                if (item.storeRegion === '國外') {
+                    document.getElementById('itemRegionForeign').value = item.storeRegionSub || '日本';
+                }
+                document.getElementById('storeAddress').value = item.storeAddress || '';
+                document.getElementById('storeTime').value = item.storeTime || '';
+                document.getElementById('storeClosed').value = item.storeClosed || '';
+                document.getElementById('storeVideo').value = item.storeVideo || '';
+                document.getElementById('storeNotes').value = item.storeNotes || '';
+            }
+        }
+    } else {
+        titleEl.textContent = '撰寫新手記';
+        if (currentFilter !== 'All') {
+            catSelect.value = currentFilter;
+        }
+    }
+
+    // 刷新表單欄位顯示隱藏
+    if (typeof updateFormFieldsVisibility === 'function') {
+        updateFormFieldsVisibility();
+    }
+
+    // 啟動 Modal 滑出動畫
+    const overlay = modal.querySelector('.modal-overlay');
+    const content = modal.querySelector('.modal-content');
+
+    modal.classList.remove('hidden');
+    setTimeout(() => {
+        if (overlay) overlay.classList.remove('opacity-0');
+        if (content) content.classList.remove('translate-y-full', 'sm:translate-y-10', 'sm:opacity-0');
+    }, 10);
+}
+        
 // --- Toast 提示功能 ---
 function showToast(msg) {
     const toast = document.getElementById('toast');
