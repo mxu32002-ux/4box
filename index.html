@@ -1391,144 +1391,153 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        function saveItem() {
-            const titleInput = document.getElementById('itemTitle');
-            const title = titleInput.value.trim();
+        // ==========================================================
+// 💾 儲存與同步核心：完美分流，絕不重複建立！
+// ==========================================================
+function saveItem() {
+    const titleInput = document.getElementById('itemTitle');
+    const title = titleInput.value.trim();
 
-            if (!title) {
-                titleInput.classList.add('border-red-400', 'bg-red-50');
-                showToast('請填寫手記名稱 ✍️');
-                setTimeout(() => {
-                    titleInput.classList.remove('border-red-400', 'bg-red-50');
-                }, 1200);
-                return;
-            }
+    if (!title) {
+        titleInput.classList.add('border-red-400', 'bg-red-50');
+        showToast('請填寫手記名稱 ✍️');
+        setTimeout(() => {
+            titleInput.classList.remove('border-red-400', 'bg-red-50');
+        }, 1200);
+        return;
+    }
 
-            const id = document.getElementById('itemId').value;
-            const category = document.getElementById('itemCategory').value;
+    const id = document.getElementById('itemId').value;
+    const category = document.getElementById('itemCategory').value;
 
-            // 建立乾淨新物件
-           // 建立乾淨新物件
-            const newItem = {
-                id: id || 'item-' + Date.now().toString(),
-                title: title,
-                category: category,
-                timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
-            };
+    // 建立乾淨新物件
+    const newItem = {
+        id: id || 'item-' + Date.now().toString(),
+        title: title,
+        category: category,
+        timestamp: id ? (items.find(i => i.id === id)?.timestamp || Date.now()) : Date.now()
+    };
 
+    // 寫入各分類特殊欄位
+    if (category === '展覽') {
+        newItem.exhibitionRegion = document.getElementById('exhibitionRegion').value;
+        newItem.exhibitionLocation = document.getElementById('exhibitionLocation').value.trim();
+        newItem.exhibitionAddress = document.getElementById('exhibitionAddress').value.trim();
+        newItem.exhibitionStartDate = document.getElementById('exhibitionStartDate').value;
+        newItem.exhibitionEndDate = document.getElementById('exhibitionEndDate').value;
+        newItem.exhibitionTime = document.getElementById('exhibitionTime').value.trim();
+        newItem.exhibitionTicket = document.getElementById('exhibitionTicket').value.trim();
+        newItem.exhibitionVideo = document.getElementById('exhibitionVideo').value.trim();
+        newItem.exhibitionNotes = document.getElementById('exhibitionNotes').value.trim();
+    } else if (category === '景點') {
+        newItem.attractionRegion = document.getElementById('attractionRegion').value;
+        if (newItem.attractionRegion === '國外') {
+            newItem.attractionRegionSub = document.getElementById('attractionRegionForeign').value;
+        } else {
+            newItem.attractionRegionSub = '';
+        }
+        newItem.attractionAddress = document.getElementById('attractionAddress').value.trim();
+        newItem.attractionTime = document.getElementById('attractionTime').value.trim();
+        newItem.attractionTicket = document.getElementById('attractionTicket').value.trim();
+        newItem.attractionVideo = document.getElementById('attractionVideo').value.trim();
+        newItem.attractionNotes = document.getElementById('attractionNotes').value.trim();
+    } else if (category === '美食') {
+        newItem.foodType = document.getElementById('foodType').value;
+        newItem.foodRegion = document.getElementById('foodRegion').value;
+        if (newItem.foodRegion === '高雄') {
+            newItem.foodRegionSub = document.getElementById('foodRegionKaohsiung').value;
+        } else if (newItem.foodRegion === '國外') {
+            newItem.foodRegionSub = document.getElementById('foodRegionForeign').value;
+        } else {
+            newItem.foodRegionSub = '';
+        }
+        newItem.foodAddress = document.getElementById('foodAddress').value.trim();
+        newItem.foodTime = document.getElementById('foodTime').value.trim();
+        newItem.foodClosed = document.getElementById('foodClosed').value.trim();
+        newItem.foodVideo = document.getElementById('foodVideo').value.trim();
+        newItem.foodNotes = document.getElementById('foodNotes').value.trim();
+    } else {
+        newItem.storeRegion = document.getElementById('itemRegion').value;
+        if (newItem.storeRegion === '國外') {
+            newItem.storeRegionSub = document.getElementById('itemRegionForeign').value;
+        } else {
+            newItem.storeRegionSub = '';
+        }
+        newItem.storeAddress = document.getElementById('storeAddress').value.trim();
+        newItem.storeTime = document.getElementById('storeTime').value.trim();
+        newItem.storeClosed = document.getElementById('storeClosed').value.trim();
+        newItem.storeVideo = document.getElementById('storeVideo').value.trim();
+        newItem.storeNotes = document.getElementById('storeNotes').value.trim();
+    }
 
-            // 寫入各分類特殊欄位
-            if (category === '展覽') {
-                newItem.exhibitionRegion = document.getElementById('exhibitionRegion').value;
-                newItem.exhibitionLocation = document.getElementById('exhibitionLocation').value.trim();
-                newItem.exhibitionAddress = document.getElementById('exhibitionAddress').value.trim();
-                newItem.exhibitionStartDate = document.getElementById('exhibitionStartDate').value;
-                newItem.exhibitionEndDate = document.getElementById('exhibitionEndDate').value;
-                newItem.exhibitionTime = document.getElementById('exhibitionTime').value.trim();
-                newItem.exhibitionTicket = document.getElementById('exhibitionTicket').value.trim();
-                newItem.exhibitionVideo = document.getElementById('exhibitionVideo').value.trim();
-                newItem.exhibitionNotes = document.getElementById('exhibitionNotes').value.trim();
-            } else if (category === '景點') {
-                newItem.attractionRegion = document.getElementById('attractionRegion').value;
-                if (newItem.attractionRegion === '國外') {
-                    newItem.attractionRegionSub = document.getElementById('attractionRegionForeign').value;
-                } else {
-                    newItem.attractionRegionSub = '';
-                }
-                newItem.attractionAddress = document.getElementById('attractionAddress').value.trim();
-                newItem.attractionTime = document.getElementById('attractionTime').value.trim();
-                newItem.attractionTicket = document.getElementById('attractionTicket').value.trim();
-                newItem.attractionVideo = document.getElementById('attractionVideo').value.trim();
-                newItem.attractionNotes = document.getElementById('attractionNotes').value.trim();
-            } else if (category === '美食') {
-                newItem.foodType = document.getElementById('foodType').value;
-                newItem.foodRegion = document.getElementById('foodRegion').value;
-                if (newItem.foodRegion === '高雄') {
-                    newItem.foodRegionSub = document.getElementById('foodRegionKaohsiung').value;
-                } else if (newItem.foodRegion === '國外') {
-                    newItem.foodRegionSub = document.getElementById('foodRegionForeign').value;
-                } else {
-                    newItem.foodRegionSub = '';
-                }
-                newItem.foodAddress = document.getElementById('foodAddress').value.trim();
-                newItem.foodTime = document.getElementById('foodTime').value.trim();
-                newItem.foodClosed = document.getElementById('foodClosed').value.trim();
-                newItem.foodVideo = document.getElementById('foodVideo').value.trim();
-                newItem.foodNotes = document.getElementById('foodNotes').value.trim();
-            } else {
-                newItem.storeRegion = document.getElementById('itemRegion').value;
-                if (newItem.storeRegion === '國外') {
-                    newItem.storeRegionSub = document.getElementById('itemRegionForeign').value;
-                } else {
-                    newItem.storeRegionSub = '';
-                }
-                newItem.storeAddress = document.getElementById('storeAddress').value.trim();
-                newItem.storeTime = document.getElementById('storeTime').value.trim();
-                newItem.storeClosed = document.getElementById('storeClosed').value.trim();
-                newItem.storeVideo = document.getElementById('storeVideo').value.trim();
-                newItem.storeNotes = document.getElementById('storeNotes').value.trim();
-            }
+    // 1. 將本地欄位轉換為後端需要的標準對齊名稱
+    const payload = {
+        name: newItem.title,
+        category: newItem.category,
+        mainRegion: newItem.exhibitionRegion || newItem.attractionRegion || newItem.foodRegion || newItem.storeRegion || '',
+        subRegion: newItem.exhibitionLocation || newItem.attractionRegionSub || newItem.foodRegionSub || newItem.storeRegionSub || '',
+        address: newItem.exhibitionAddress || newItem.attractionAddress || newItem.foodAddress || newItem.storeAddress || '',
+        openTime: newItem.exhibitionTime || newItem.attractionTime || newItem.foodTime || newItem.storeTime || '',
+        offDay: newItem.foodClosed || newItem.storeClosed || '',
+        ticketInfo: newItem.exhibitionTicket || newItem.attractionTicket || '',
+        foodType: newItem.foodType || '',
+        startDate: newItem.exhibitionStartDate || '',
+        endDate: newItem.exhibitionEndDate || '',
+        videoUrl: newItem.exhibitionVideo || newItem.attractionVideo || newItem.foodVideo || newItem.storeVideo || '',
+        note: newItem.exhibitionNotes || newItem.attractionNotes || newItem.foodNotes || newItem.storeNotes || ''
+    };
 
-            if (id) {
-                // 編輯覆蓋
-                items = items.map(i => i.id === id ? newItem : i);
-                showToast('已妥善更新回憶手帳 ✨');
-            } else {
-                // 新增
-                items.push(newItem);
-                showToast('已將嶄新記憶收藏至手帳中 ✨');
-            }
+    // 🎯 絕對防禦判斷門：有 ID 就是編輯，沒 ID 才是新增！
+    if (id && id !== '') {
+        // 【狀況 A：編輯舊資料】
+        items = items.map(i => i.id === id ? newItem : i);
+        showToast('已妥善更新回憶手帳 ✨');
+        renderItems();
 
-            saveToLocal();
-            renderItems();
-
-            // ==========================================
-            // 🚀 【全新擴充】自動同步將資料送往 Notion 雲端
-            // ==========================================
-
-            // 1. 將本地方言欄位轉換為後端需要的標準對齊名稱
-            const payload = {
-                name: newItem.title,
-                category: newItem.category,
-                mainRegion: newItem.exhibitionRegion || newItem.attractionRegion || newItem.foodRegion || newItem.storeRegion || '',
-                subRegion: newItem.exhibitionLocation || newItem.attractionRegionSub || newItem.foodRegionSub || newItem.storeRegionSub || '',
-                address: newItem.exhibitionAddress || newItem.attractionAddress || newItem.foodAddress || newItem.storeAddress || '',
-                openTime: newItem.exhibitionTime || newItem.attractionTime || newItem.foodTime || newItem.storeTime || '',
-                offDay: newItem.foodClosed || newItem.storeClosed || '',
-                ticketInfo: newItem.exhibitionTicket || newItem.attractionTicket || '',
-                foodType: newItem.foodType || '',
-                startDate: newItem.exhibitionStartDate || '',
-                endDate: newItem.exhibitionEndDate || '',
-                videoUrl: newItem.exhibitionVideo || newItem.attractionVideo || newItem.foodVideo || newItem.storeVideo || '',
-                note: newItem.exhibitionNotes || newItem.attractionNotes || newItem.foodNotes || newItem.storeNotes || ''
-            };
-
-            // 2. 透過先前亮起大綠燈的 Render 伺服器傳送出去
-            fetch('https://fourbox.onrender.com/api/add-note', {
+        // 如果這個 ID 是真的 Notion 雲端 ID（不是本地暫存的），才發射更新密令
+        if (!id.startsWith('item-')) {
+            console.log("🔄 偵測到真實雲端卡片，正在發射更新密令... ID:", id);
+            fetch(`https://fourbox.onrender.com/api/notion-update/${id}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             })
             .then(res => res.json())
             .then(data => {
                 if (data.success) {
-                    showToast('📜 已同步妥善收藏至 Notion 雲端！');
-                } else {
-                    console.error('Notion 寫入失敗:', data.error);
-                    showToast('⚠️ 本地已存，但雲端寫入失敗');
+                    setTimeout(() => { loadNotionCloudData(); }, 1000);
                 }
             })
-            .catch(err => {
-                console.error('網路連線失敗:', err);
-                showToast('📡 雲端連線失敗，請檢查網路');
-            });
-
-            // ==========================================
-
-            closeEditModal();
+            .catch(err => console.error('雲端更新失敗:', err));
         }
+
+    } else {
+        // 【狀況 B：真正全新的資料】
+        items.push(newItem);
+        showToast('已將嶄新記憶收藏至手帳中 ✨');
+        renderItems();
+
+        console.log("🆕 偵測到全新項目，正式同步至 Notion 雲端...");
+        fetch('https://fourbox.onrender.com/api/add-note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                showToast('📜 已同步妥善收藏至 Notion 雲端！');
+                setTimeout(() => { loadNotionCloudData(); }, 1000);
+            }
+        })
+        .catch(err => {
+            console.error('網路連線失敗:', err);
+            showToast('📡 雲端連線失敗，請檢查網路');
+        });
+    }
+
+    closeEditModal();
+}
 
         // 自訂刪除視窗邏輯
         function confirmDelete(id) {
