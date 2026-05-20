@@ -678,8 +678,9 @@ async function loadNotionCloudData() {
 } // 👈 loadNotionCloudData 函數的完美總結尾，絕不多也不少！
 
         // --- 核心儲存功能 (Core Database Sync) ---
-        function saveToLocal() {
-            localStorage.setItem('lifelog_items', JSON.stringify(items));
+function saveToLocal() {
+    localStorage.setItem('lifelog_items', JSON.stringify(items));
+}
         
 
         // --- 篩選與搜尋重繪 (Filtering & Render) ---
