@@ -608,41 +608,80 @@ let currentSort = 'newest'; // 預設：最新最前 'newest'
 // ==========================================================
 async function loadNotionCloudData() {
     try {
-        console.log("🎬 開始與 Notion 雲端同步...");
-
+        console.log("🎬 開始與 Notion 雲端同步下載...");
+        
         const response = await fetch('https://fourbox.onrender.com/api/notion');
         const result = await response.json();
-
+        
         if (result.success && result.data) {
-
-            // 🎯 【黑客遮眼過濾網】只要不是 'deleted' 的卡片就放行
+            console.log("📥 成功從雲端撈回最新資料:", result.data);
+            
+            // 🎯 【過濾網】只要不是已刪除的卡片就放行
             const activeData = result.data.filter(item => item.status !== 'deleted');
 
-            // 2. 翻譯並填入 items
+            // 2. 將雲端的標準欄位，精準分發給網頁的四大分類變數
             items = activeData.map(item => {
                 return {
                     id: item.id,
                     title: item.title,
                     category: item.category === '未分類' ? '展覽' : item.category, 
-                    status: item.status || 'normal', // 👈 確保前端物件也有保留這個狀態！
-
-                    exhibitionRegion: item.region, exhibitionAddress: item.address, exhibitionTime: item.time, exhibitionTicket: item.ticket, exhibitionNotes: item.notes,
-                    attractionRegion: item.region, attractionAddress: item.address, attractionTime: item.time, attractionTicket: item.ticket, attractionNotes: item.notes,
-                    foodRegion: item.region, foodAddress: item.address, foodTime: item.time, foodClosed: item.holiday, foodNotes: item.notes,
-                    storeRegion: item.region, storeAddress: item.address, storeTime: item.time, storeNotes: item.notes,
+                    status: item.status || 'normal', 
+                    
+                    // 📅 讓獨立的日期欄位完美各就各位
+                    startDate: item.startDate || '',
+                    endDate: item.endDate || '',
+                    
+                    // 🎯 展覽類別變數
+                    exhibitionRegion: item.region, 
+                    exhibitionLocation: item.subRegion, // 👈 對齊雲端的細分地區/地點
+                    exhibitionAddress: item.address, 
+                    exhibitionTime: item.time || '未註記', 
+                    exhibitionTicket: item.ticket, 
+                    exhibitionVideo: item.videoUrl,
+                    exhibitionNotes: item.notes,
+                    
+                    // 🎯 景點類別變數
+                    attractionRegion: item.region, 
+                    attractionRegionSub: item.subRegion,
+                    attractionAddress: item.address, 
+                    attractionTime: item.time || '24小時開放', 
+                    attractionTicket: item.ticket, 
+                    attractionVideo: item.videoUrl,
+                    attractionNotes: item.notes,
+                    
+                    // 🎯 美食類別變數
+                    foodType: '日式', // 如果雲端有延伸欄位可再擴充
+                    foodRegion: item.region, 
+                    foodRegionSub: item.subRegion,
+                    foodAddress: item.address, 
+                    foodTime: item.time || '無資料', 
+                    foodClosed: item.holiday, 
+                    foodVideo: item.videoUrl,
+                    foodNotes: item.notes,
+                    
+                    // 🎯 店家類別變數
+                    storeRegion: item.region, 
+                    storeRegionSub: item.subRegion,
+                    storeAddress: item.address, 
+                    storeTime: item.time || '無資料', 
+                    storeClosed: item.holiday, 
+                    storeVideo: item.videoUrl,
+                    storeNotes: item.notes,
+                    
                     timestamp: Date.now() 
                 };
             });
 
+            // 清空本地舊快取，全面迎接雲端最新正本資料
             localStorage.clear();
 
             if (typeof renderItems === 'function') {
                 renderItems(); 
-                console.log("🎉 雲端卡片已透過原本的排版引擎完美畫在畫面上！");
+                console.log("🎉 雲端最新資料已完美下載並渲染成功！");
             }
         }
     } catch (error) {
-        console.error("❌ 雲端讀取發生錯誤:", error);
+        console.error("❌ 前端讀取雲端發生錯誤:", error);
     }
 }
 // ==========================================================
