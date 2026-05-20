@@ -1157,4 +1157,17 @@ function closeDetailModal() {
 
 // --- Toast 提示功能 ---
 function showToast(msg) {
-    const
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    if (!toast || !toastMsg) return;
+
+    toastMsg.textContent = msg;
+    toast.classList.remove('opacity-0', 'translate-y-2', 'pointer-events-none');
+    
+    setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2', 'pointer-events-none');
+    }, 2500);
+}
+</script> 
+</body>
+</html>
