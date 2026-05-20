@@ -91,6 +91,95 @@ app.post('/api/add-note', async (req, res) => {
   }
 });
 
+// === 🎯 全新追加：更新 Notion 雲端舊資料的完美對齊版 ===
+app.post('/api/notion-update/:id', async (req, res) => {
+  const databaseId = process.env.NOTION_DATABASE_ID;
+  
+  if (!databaseId) {
+    return res.status(500).json({ success: false, error: '尚未設定 DATABASE_ID' });
+  }
+
+  try {
+    const { id } = req.params;
+    const { 
+      name, category, mainRegion, subRegion, address, 
+      openTime, offDay, ticketInfo, foodType, 
+      startDate, endDate, videoUrl, note 
+    } = req.body;
+
+    console.log(`🔄 [雲端智慧更新] 正在通知 Notion 修改頁面，ID: ${id}`);
+
+    // 🎯 這裡的欄位完全複製你 add-note 的最標準格式，咬合度 100%！
+    const properties = {
+      "名稱": { 
+        title: [{ text: { content: name || "未命名隨手記" } }] 
+      },
+      "分類": { // 👈 統一對齊叫「分類」！
+        select: category ? { name: category } : null 
+      },
+      "主要地區": { 
+        select: mainRegion ? { name: mainRegion } : null 
+      },
+      "細分地區/地點": { 
+        rich_text: [{ text: { content: subRegion || "" } }] 
+      },
+      "詳細地址": { 
+        rich_text: [{ text: { content: address || "" } }] 
+      },
+      "營業/開放時間": { 
+        rich_text: [{ text: { content: openTime || "" } }] 
+      },
+      "固定公休日": { 
+        rich_text: [{ text: { content: offDay || "" } }] 
+      },
+      "門票/票券資訊": { 
+        rich_text: [{ text: { content: ticketInfo || "" } }] 
+      },
+      "隨手札記備註": { 
+        rich_text: [{ text: { content: note || "" } }] 
+      }
+    };
+
+    // 選填與特殊格式欄位防禦（與你的 add-note 一模一樣）
+    if (foodType && foodType.trim() !== '') {
+      properties["美食總類"] = { select: { name: foodType } };
+    } else {
+      properties["美食總類"] = { select: null }; // 如果清空了就抹除
+    }
+    
+    if (videoUrl && videoUrl.trim() !== '') {
+      properties["影片連結"] = { url: videoUrl };
+    } else {
+      properties["影片連結"] = { url: null };
+    }
+    
+    if (startDate && startDate.trim() !== '') {
+      properties["開始日期"] = { date: { start: startDate } };
+    } else {
+      properties["開始日期"] = null;
+    }
+    
+    if (endDate && endDate.trim() !== '') {
+      properties["結束日期"] = { date: { start: endDate } };
+    } else {
+      properties["結束日期"] = null;
+    }
+
+    // 呼叫 Notion 官方 API 進行舊頁面的資料覆蓋更新 (update)
+    await notion.pages.update({
+      page_id: id,
+      properties: properties
+    });
+
+    console.log('✅ Notion 更新成功！ID:', id);
+    return res.status(200).json({ success: true, message: '雲端手帳更新成功！' });
+
+  } catch (error) {
+    console.error('❌ Notion 更新失敗，詳細日誌:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.get('/', (req, res) => {
   res.send('🌿 Live!');
 });
