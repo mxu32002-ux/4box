@@ -606,6 +606,9 @@ let currentSort = 'newest'; // 預設：最新最前 'newest'
 // ==========================================================
 // 🚀 核心大腦：去 Render 幫 items 變數注入 Notion 活資料（欄位分家完美版）
 // ==========================================================
+// ==========================================================
+// 🚀 核心大腦：去 Render 幫 items 變數注入 Notion 活資料
+// ==========================================================
 async function loadNotionCloudData() {
     try {
         console.log("🎬 開始與 Notion 雲端同步...");
@@ -627,7 +630,7 @@ async function loadNotionCloudData() {
                     category: item.category === '未分類' ? '展覽' : item.category, 
                     status: item.status || 'normal', 
                     
-                    // 📅 讓開始與結束日期獨立出來，成為前端物件的專屬屬性！
+                    // 📅 讓開始與結束日期獨立出來
                     startDate: item.startDate || '',
                     endDate: item.endDate || '',
                     
@@ -635,7 +638,7 @@ async function loadNotionCloudData() {
                     exhibitionRegion: item.region, 
                     exhibitionLocation: item.notes, 
                     exhibitionAddress: item.address, 
-                    exhibitionTime: item.time || '未註記', // 👈 營業時間歸位！
+                    exhibitionTime: item.time || '未註記', 
                     exhibitionTicket: item.ticket, 
                     exhibitionNotes: item.notes,
                     
@@ -660,7 +663,7 @@ async function loadNotionCloudData() {
                     
                     timestamp: Date.now() 
                 };
-            });
+            }); // 👈 map 的結尾
 
             localStorage.clear();
 
@@ -668,38 +671,11 @@ async function loadNotionCloudData() {
                 renderItems(); 
                 console.log("🎉 雲端卡片已透過原本的排版引擎完美畫在畫面上！");
             }
-        }
+        } // 👈 if 的結尾
     } catch (error) {
         console.error("❌ 雲端讀取發生錯誤:", error);
-    }
-}
-
-            localStorage.clear();
-
-            if (typeof renderItems === 'function') {
-                renderItems(); 
-                console.log("🎉 雲端卡片已透過原本的排版引擎完美畫在畫面上！");
-            }
-        }
-    } catch (error) {
-        console.error("❌ 雲端讀取發生錯誤:", error);
-    }
-}
-
-// ⏰ 自動執行：只要網頁一打開，骨架就緒後，立刻自動執行雲端讀取
-
-window.addEventListener('DOMContentLoaded', () => {
-    loadNotionCloudData();
-});
-
-        // 分類對應圖示
-        const categoryIcons = {
-            '展覽': '<i class="fa-solid fa-palette"></i>',
-            '景點': '<i class="fa-solid fa-mountain-sun"></i>',
-            '美食': '<i class="fa-solid fa-utensils"></i>',
-            '店家': '<i class="fa-solid fa-store"></i>'
-        };
-
+    } // 👈 catch 的結尾
+} // 👈 loadNotionCloudData 函數的完美總結尾，絕不多也不少！
 
         // --- 核心儲存功能 (Core Database Sync) ---
         function saveToLocal() {
