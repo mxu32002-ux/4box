@@ -681,172 +681,192 @@ async function loadNotionCloudData() {
 function saveToLocal() {
     localStorage.setItem('lifelog_items', JSON.stringify(items));
 }
-        
 
-        // --- 篩選與搜尋重繪 (Filtering & Render) ---
-        function changeCategoryFilter(cat) {
-            currentFilter = cat;
-            
-            // 更新底部導覽高亮
-            document.querySelectorAll('.nav-item').forEach(btn => {
-                btn.classList.remove('text-diary-primary');
-                btn.classList.add('text-stone-400');
-            });
-            const activeNav = document.getElementById(`nav-${cat}`);
-            if (activeNav) {
-                activeNav.classList.remove('text-stone-400');
-                activeNav.classList.add('text-diary-primary');
+// --- 篩選與搜尋重繪 (Filtering & Render) ---
+function changeCategoryFilter(cat) {
+    currentFilter = cat;
+    
+    // 更新底部導覽高亮
+    document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('text-diary-primary');
+        btn.classList.add('text-stone-400');
+    });
+    const activeNav = document.getElementById(`nav-${cat}`);
+    if (activeNav) {
+        activeNav.classList.remove('text-stone-400');
+        activeNav.classList.add('text-diary-primary');
+    }
+
+    renderItems();
+}
+
+function handleSearch() {
+    renderItems();
+}
+
+function handleSortChange() {
+    currentSort = document.getElementById('sortSelect').value;
+    
+    let toastMsg = "手札排序：最新";
+    if (currentSort === 'oldest') {
+        toastMsg = "手札排序：最舊";
+    } else if (currentSort === 'region') {
+        toastMsg = "手札排序：依地區排序";
+    } else if (currentSort === 'category') {
+        toastMsg = "手札排序：依分類排序";
+    }
+    
+    showToast(toastMsg);
+    renderItems();
+}
+
+// 智慧提取各種類別的地區資訊，方便統一排序
+function getItemRegion(item) {
+    if (item.category === '展覽') {
+        return item.exhibitionLocation ? item.exhibitionLocation : (item.exhibitionRegion || '');
+    } else if (item.category === '景點') {
+        return (item.attractionRegion === '國外' && item.attractionRegionSub) ? item.attractionRegionSub : (item.attractionRegion || '');
+    } else if (item.category === '美食') {
+        return (item.foodRegion === '高雄' || item.foodRegion === '國外') && item.foodRegionSub ? item.foodRegionSub : (item.foodRegion || '');
+    } else {
+        return (item.storeRegion === '國外' && item.storeRegionSub) ? item.storeRegionSub : (item.storeRegion || '');
+    }
+}
+
+function renderItems() {
+    const container = document.getElementById('itemsList');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // 1. 類別過濾
+    let filtered = items;
+    if (currentFilter !== 'All') {
+        filtered = items.filter(item => item.category === currentFilter);
+    }
+
+    // 3. 排序 (時間由新到舊、時間由舊到新、依地區中文排序、依分類手帳排序)
+    if (currentSort === 'newest') {
+        filtered.sort((a, b) => b.timestamp - a.timestamp);
+    } else if (currentSort === 'oldest') {
+        filtered.sort((a, b) => a.timestamp - b.timestamp);
+    } else if (currentSort === 'region') {
+        filtered.sort((a, b) => {
+            const regA = getItemRegion(a);
+            const regB = getItemRegion(b);
+            return regA.localeCompare(regB, 'zh-Hant');
+        });
+    } else if (currentSort === 'category') {
+        const catOrder = { '展覽': 1, '景點': 2, '美食': 3, '店家': 4 };
+        filtered.sort((a, b) => {
+            const orderA = catOrder[a.category] || 99;
+            const orderB = catOrder[b.category] || 99;
+            if (orderA !== orderB) {
+                return orderA - orderB;
             }
+            return b.timestamp - a.timestamp;
+        });
+    }
 
-            renderItems();
-        }
-
-        function handleSearch() {
-            renderItems();
-        }
-
-        function handleSortChange() {
-            currentSort = document.getElementById('sortSelect').value;
-            
-            let toastMsg = "手札排序：最新";
-            if (currentSort === 'oldest') {
-                toastMsg = "手札排序：最舊";
-            } else if (currentSort === 'region') {
-                toastMsg = "手札排序：依地區排序";
-            } else if (currentSort === 'category') {
-                toastMsg = "手札排序：依分類排序";
-            }
-            
-            showToast(toastMsg);
-            renderItems();
-        }
-
-        // 智慧提取各種類別的地區資訊，方便統一排序
-        function getItemRegion(item) {
-            if (item.category === '展覽') {
-                return item.exhibitionRegion || '';
-            } else if (item.category === '景點') {
-                return (item.attractionRegion === '國外' && item.attractionRegionSub) ? item.attractionRegionSub : (item.attractionRegion || '');
-            } else if (item.category === '美食') {
-                return (item.foodRegion === '高雄' || item.foodRegion === '國外') && item.foodRegionSub ? item.foodRegionSub : (item.foodRegion || '');
-            } else {
-                return (item.storeRegion === '國外' && item.storeRegionSub) ? item.storeRegionSub : (item.storeRegion || '');
-            }
-        }
-
-        function renderItems() {
-            const container = document.getElementById('itemsList');
-            container.innerHTML = '';
-
-            const q = document.getElementById('searchInput').value.trim().toLowerCase();
-
-            // 1. 類別過濾
-            let filtered = items;
-            if (currentFilter !== 'All') {
-                filtered = items.filter(item => item.category === currentFilter);
-            }
-
-            // 3. 排序 (時間由新到舊、時間由舊到新、依地區中文排序、依分類手帳排序)
-            if (currentSort === 'newest') {
-                filtered.sort((a, b) => b.timestamp - a.timestamp);
-            } else if (currentSort === 'oldest') {
-                filtered.sort((a, b) => a.timestamp - b.timestamp);
-            } else if (currentSort === 'region') {
-                filtered.sort((a, b) => {
-                    const regA = getItemRegion(a);
-                    const regB = getItemRegion(b);
-                    // 使用繁體中文 localeCompare 進行地區排列
-                    return regA.localeCompare(regB, 'zh-Hant');
-                });
-            } else if (currentSort === 'category') {
-                const catOrder = { '展覽': 1, '景點': 2, '美食': 3, '店家': 4 };
-                filtered.sort((a, b) => {
-                    const orderA = catOrder[a.category] || 99;
-                    const orderB = catOrder[b.category] || 99;
-                    if (orderA !== orderB) {
-                        return orderA - orderB;
-                    }
-                    // 同類別時依時間最新排序
-                    return b.timestamp - a.timestamp;
-                });
-            }
-
-            if (filtered.length === 0) {
-                container.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-20 text-center">
-                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-stone-300 border border-diary-light/40 mb-3 shadow-soft">
-                            <i class="fa-solid fa-wind text-xl"></i>
-                        </div>
-                        <h3 class="font-serif font-bold text-stone-400 text-sm">這兒還是一張白紙</h3>
-                        <p class="text-[11px] text-stone-400 font-serif mt-1">點擊右下角按鈕寫下新的足跡記憶</p>
-                    </div>
-                `;
-                return;
-            }
-
-            filtered.forEach(item => {
-                const card = createCardElement(item);
-                container.appendChild(card);
-            });
-        }
-
-        // ==========================================================
-        // 🔮 四大分類小卡 HTML 樣板（語法 100% 精準閉合版）
-        // ==========================================================
-        if (item.category === '展覽') {
-            bodyContent = `
-                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                    <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-stone-400 text-center"></i>地點：${item.exhibitionLocation || '-'}</div>
-                    ${(item.startDate || item.endDate) ? `
-                    <div class="flex items-center gap-2 text-diary-accent font-bold"><i class="fa-regular fa-calendar w-4 text-stone-400 text-center"></i>展期：${item.startDate || '?'} ~ ${item.endDate || '?'}</div>
-                    ` : ''}
-                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.exhibitionTime || '未註記'}</div>
-                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.exhibitionTicket || '免費'}</div>
+    if (filtered.length === 0) {
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-20 text-center">
+                <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-stone-300 border border-diary-light/40 mb-3 shadow-soft">
+                    <i class="fa-solid fa-wind text-xl"></i>
                 </div>
-            `;
-        } else if (item.category === '景點') {
-            bodyContent = `
-                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.attractionTime || '24小時開放'}</div>
-                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.attractionTicket || '免費'}</div>
-                </div>
-            `;
-        } else if (item.category === '美食') {
-            bodyContent = `
-                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                    <div class="flex items-center gap-2"><i class="fa-solid fa-bowl-food w-4 text-stone-400 text-center"></i>種類：${item.foodType || '其他'}</div>
-                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.foodTime || '無資料'}</div>
-                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.foodClosed || '無特別註記'}</div>
-                </div>
-            `;
-        } else {
-            bodyContent = `
-                <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
-                    <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.storeTime || '無資料'}</div>
-                    <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.storeClosed || '無特別註記'}</div>
-                </div>
-            `;
-        }
-        // ==========================================================
+                <h3 class="font-serif font-bold text-stone-400 text-sm">這兒還是一張白紙</h3>
+                <p class="text-[11px] text-stone-400 font-serif mt-1">點擊右下角按鈕寫下新的足跡記憶</p>
+            </div>
+        `;
+        return;
+    }
 
-            div.innerHTML = headerArea + bodyContent;
-            return div;
-        }
+    filtered.forEach(item => {
+        const card = createCardElement(item);
+        container.appendChild(card);
+    });
+}
 
-        function openDetailModal(id) {
-            const item = items.find(i => i.id === id);
-            if (!item) return;
-            function openDetailModal(id) {
+// ==========================================================
+// 🎨 【大歸位】小卡片排版引擎（把漏掉的函數大門重新裝上！）
+// ==========================================================
+function createCardElement(item) {
+    const div = document.createElement('div');
+    
+    if (item.status === 'archived') {
+        div.className = 'diary-card bg-stone-100 border border-stone-200/60 opacity-70 relative';
+    } else {
+        div.className = 'diary-card bg-white border border-stone-200/60 shadow-sm relative';
+    }
+
+    let badgeText = getItemRegion(item) || '台北';
+
+    const headerArea = `
+        <div class="flex justify-between items-start mb-2.5">
+            <div>
+                <span class="inline-block bg-diary-accent/10 text-diary-accent text-[9px] px-2 py-0.5 rounded-full font-sans font-medium mb-1">${item.category} · ${badgeText}</span>
+                <h3 class="text-xs font-serif font-bold text-stone-800 leading-tight tracking-wide">${item.title}</h3>
+            </div>
+            <div class="flex gap-1.5 ml-2 pt-0.5">
+                <button onclick="openDetailModal('${item.id}')" class="text-stone-400 hover:text-stone-600 transition-colors p-1" title="閱讀詳細">
+                    <i class="fa-regular fa-eye text-[11px]"></i>
+                </button>
+                <button onclick="openEditModal('${item.id}')" class="text-stone-400 hover:text-diary-accent transition-colors p-1" title="編修此章">
+                    <i class="fa-regular fa-pen-to-square text-[11px]"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    let bodyContent = '';
+
+    if (item.category === '展覽') {
+        bodyContent = `
+            <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-stone-400 text-center"></i>地點：${item.exhibitionLocation || '-'}</div>
+                ${(item.startDate || item.endDate) ? `
+                <div class="flex items-center gap-2 text-diary-accent font-bold"><i class="fa-regular fa-calendar w-4 text-stone-400 text-center"></i>展期：${item.startDate || '?'} ~ ${item.endDate || '?'}</div>
+                ` : ''}
+                <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.exhibitionTime || '未註記'}</div>
+                <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.exhibitionTicket || '免費'}</div>
+            </div>
+        `;
+    } else if (item.category === '景點') {
+        bodyContent = `
+            <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.attractionTime || '24小時開放'}</div>
+                <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.attractionTicket || '免費'}</div>
+            </div>
+        `;
+    } else if (item.category === '美食') {
+        bodyContent = `
+            <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                <div class="flex items-center gap-2"><i class="fa-solid fa-bowl-food w-4 text-stone-400 text-center"></i>種類：${item.foodType || '其他'}</div>
+                <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.foodTime || '無資料'}</div>
+                <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.foodClosed || '無特別註記'}</div>
+            </div>
+        `;
+    } else {
+        bodyContent = `
+            <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
+                <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.storeTime || '無資料'}</div>
+                <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-calendar-minus w-4 text-center"></i>公休：${item.storeClosed || '無特別註記'}</div>
+            </div>
+        `;
+    }
+
+    div.innerHTML = headerArea + bodyContent;
+    return div;
+}
+
+// --- 詳細視窗相關功能 ---
+function openDetailModal(id) {
     const item = items.find(i => i.id === id);
     if (!item) return;
 
-    // ==========================================================
-    // 🎯 【就是現在！請在這裡精確補上這行補槍指令】
-    // ==========================================================
-    itemToDelete = id; // ✨ 讓刪除法官知道，我們現在瞄準的就是這筆 Notion 真 ID！
+    // 🎯 綁定刪除真 ID 指針
+    itemToDelete = id; 
 
     document.getElementById('detailCategoryIcon').innerHTML = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
-    // ...後面原本處理詳細欄位的程式碼照舊...
 }
 
             document.getElementById('detailCategoryIcon').innerHTML = categoryIcons[item.category] || '<i class="fa-solid fa-feather"></i>';
