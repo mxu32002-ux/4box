@@ -854,7 +854,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 bodyContent = `
                     <div class="bg-diary-bg/40 rounded-2xl p-3.5 text-[11px] font-serif text-stone-600 space-y-1.5 border border-stone-100">
                         <div class="flex items-center gap-2"><i class="fa-solid fa-location-dot w-4 text-stone-400 text-center"></i>地點：${item.exhibitionLocation || '-'}</div>
-                        <div class="flex items-center gap-2"><i class="fa-regular fa-calendar w-4 text-stone-400 text-center"></i>展覽：${item.exhibitionStartDate || '?'} ~ ${item.exhibitionEndDate || '?'}</div>
+                        <div class="flex items-center gap-2"><i class="fa-regular fa-calendar w-4 text-stone-400 text-center"></i>展覽：${item.startDate || '?'} ~ ${item.endDate || '?'}</div>
                         <div class="flex items-center gap-2"><i class="fa-regular fa-clock w-4 text-stone-400 text-center"></i>時間：${item.exhibitionTime || '未註記'}</div>
                         <div class="flex items-center gap-2 text-diary-secondary font-medium"><i class="fa-solid fa-ticket w-4 text-center"></i>門票：${item.exhibitionTicket || '免費'}</div>
                     </div>
