@@ -1319,11 +1319,20 @@ function openEditModal(id = null) {
             } else if (item.category === '美食') {
                 document.getElementById('foodType').value = item.foodType || '日式';
                 document.getElementById('foodRegion').value = item.foodRegion || '高雄';
-                if (item.foodRegion === '高雄') {
-                    document.getElementById('foodRegionKaohsiung').value = item.foodRegionSub || '鹽埕區';
-                } else if (item.foodRegion === '國外') {
-                    document.getElementById('foodRegionForeign').value = item.foodRegionSub || '日本';
+                if (typeof updateFormFieldsVisibility === 'function') {
+                    updateFormFieldsVisibility();
                 }
+                if (item.foodRegion === '高雄') {
+                    const kaohsiungSelect = document.getElementById('foodRegionKaohsiung');
+                    if (kaohsiungSelect) {
+                        kaohsiungSelect.value = item.foodRegionSub || '鹽埕區';
+                    }
+                } else if (item.foodRegion === '國外') {
+                    const foreignSelect = document.getElementById('foodRegionForeign');
+                    if (foreignSelect) {
+                        foreignSelect.value = item.foodRegionSub || '日本';
+                }
+            }
                 document.getElementById('foodAddress').value = item.foodAddress || '';
                 document.getElementById('foodTime').value = item.foodTime || '';
                 document.getElementById('foodClosed').value = item.foodClosed || '';
