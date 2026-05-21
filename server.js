@@ -17,7 +17,7 @@ app.use(express.json());
 const notion = new Client({ auth: process.env.NOTION_INTEGRATION_TOKEN });
 
 // ==========================================================
-// 🆕 新增卡片到 Notion (Add Note)
+// 🆕 新增卡片到 Notion (Add Note) - 絕對免疫版
 // ==========================================================
 app.post('/api/add-note', async (req, res) => {
     const databaseId = process.env.NOTION_DATABASE_ID;
@@ -26,10 +26,9 @@ app.post('/api/add-note', async (req, res) => {
     try {
         const { name, category, mainRegion, subRegion, address, openTime, offDay, ticketInfo, foodType, startDate, endDate, videoUrl, note } = req.body;
         
+        // 🎯 1. 核心包裹：只放文字類型的欄位 (文字可以接受空陣列 [])
         const properties = {
             "名稱": { title: [{ text: { content: name || "未命名隨手記" } }] },
-            "分類": { select: category ? { name: category } : null },
-            "主要地區": { select: mainRegion ? { name: mainRegion } : null },
             "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
             "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
             "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
@@ -38,6 +37,9 @@ app.post('/api/add-note', async (req, res) => {
             "隨手札記備註": { rich_text: note ? [{ text: { content: note } }] : [] }
         };
 
+        // 🛡️ 2. 危險包裹防禦：Select、Date、URL 這些如果沒填，我們「絕對不加進包裹裡」，連 null 都不給！
+        if (category && category.trim() !== '') properties["分類"] = { select: { name: category } };
+        if (mainRegion && mainRegion.trim() !== '') properties["主要地區"] = { select: { name: mainRegion } };
         if (foodType && foodType.trim() !== '') properties["美食種類"] = { select: { name: foodType } };
         if (videoUrl && videoUrl.trim() !== '') properties["影片連結"] = { url: videoUrl };
         if (startDate && startDate.trim() !== '') properties["開始日期"] = { date: { start: startDate } };
@@ -46,10 +48,10 @@ app.post('/api/add-note', async (req, res) => {
         const response = await notion.pages.create({ parent: { database_id: databaseId }, properties: properties });
         res.json({ success: true, data: response });
     } catch (error) {
+        console.error("❌ Notion 新增失敗:", error);
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
 // ==========================================================
 // 🔄 更新 Notion 舊資料 (Notion Update)
 // ==========================================================
