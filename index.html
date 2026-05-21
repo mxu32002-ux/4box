@@ -1317,27 +1317,40 @@ function openEditModal(id = null) {
                 document.getElementById('attractionVideo').value = item.attractionVideo || '';
                 document.getElementById('attractionNotes').value = item.attractionNotes || '';
             } else if (item.category === '美食') {
-                document.getElementById('foodType').value = item.foodType || '日式';
-                document.getElementById('foodRegion').value = item.foodRegion || '高雄';
-                if (typeof updateFormFieldsVisibility === 'function') {
-                    updateFormFieldsVisibility();
-                }
-                if (item.foodRegion === '高雄') {
-                    const kaohsiungSelect = document.getElementById('foodRegionKaohsiung');
-                    if (kaohsiungSelect) {
-                        kaohsiungSelect.value = item.foodRegionSub || '鹽埕區';
-                    }
-                } else if (item.foodRegion === '國外') {
-                    const foreignSelect = document.getElementById('foodRegionForeign');
-                    if (foreignSelect) {
-                        foreignSelect.value = item.foodRegionSub || '日本';
-                    }
+    // 1. 先賦值類型與地區
+    document.getElementById('foodType').value = item.foodType || '日式';
+    document.getElementById('foodRegion').value = item.foodRegion || '高雄';
+
+    // 2. 切換顯示邏輯 (這可能會導致選單重置)
+    if (typeof updateFormFieldsVisibility === 'function') {
+        updateFormFieldsVisibility();
+    }
+
+    // 3. 🔥 用 setTimeout 延遲 0 毫秒，確保在所有 DOM 變化都完成後再填值
+    setTimeout(() => {
+        if (item.foodRegion === '高雄') {
+            const kaohsiungSelect = document.getElementById('foodRegionKaohsiung');
+            if (kaohsiungSelect) {
+                // 確保我們讀取到的是字串並清除多餘空白
+                const val = (item.subRegion || '鹽埕區').trim();
+                kaohsiungSelect.value = val;
+                console.log("已將行政區選單設定為:", val);
             }
-                document.getElementById('foodAddress').value = item.foodAddress || '';
-                document.getElementById('foodTime').value = item.foodTime || '';
-                document.getElementById('foodClosed').value = item.foodClosed || '';
-                document.getElementById('foodVideo').value = item.foodVideo || '';
-                document.getElementById('foodNotes').value = item.foodNotes || '';
+        } else if (item.foodRegion === '國外') {
+            const foreignSelect = document.getElementById('foodRegionForeign');
+            if (foreignSelect) {
+                foreignSelect.value = (item.subRegion || '日本').trim();
+            }
+        }
+    }, 0); 
+
+    // 4. 其餘欄位賦值
+    document.getElementById('foodAddress').value = item.foodAddress || '';
+    document.getElementById('foodTime').value = item.foodTime || '';
+    document.getElementById('foodClosed').value = item.foodClosed || '';
+    document.getElementById('foodVideo').value = item.foodVideo || '';
+    document.getElementById('foodNotes').value = item.foodNotes || '';
+}
             } else {
                 document.getElementById('itemRegion').value = item.storeRegion || '台北';
                 if (item.storeRegion === '國外') {
