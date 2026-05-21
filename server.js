@@ -26,9 +26,9 @@ app.post('/api/add-note', async (req, res) => {
     try {
         const { name, category, mainRegion, subRegion, address, openTime, offDay, ticketInfo, foodType, startDate, endDate, videoUrl, note } = req.body;
         
-        // 🎯 1. 核心包裹：注意！這裡已經改成 "標題"
+        // 🎯 1. 核心包裹
         const properties = {
-            "標題": { title: [{ text: { content: name || "未命名隨手記" } }] },
+            "Name": { title: [{ text: { content: name || "未命名隨手記" } }] },
             "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
             "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
             "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
@@ -64,9 +64,9 @@ app.post('/api/notion-update/:id', async (req, res) => {
         const { id } = req.params;
         const { name, category, mainRegion, subRegion, address, openTime, offDay, ticketInfo, foodType, startDate, endDate, videoUrl, note } = req.body;
 
-        // 🎯 1. 核心包裹：注意！這裡已經改成 "標題"
+        // 🎯 1. 核心包裹
         const properties = {
-            "標題": { title: [{ text: { content: name || "未命名隨手記" } }] },
+            "Name": { title: [{ text: { content: name || "未命名隨手記" } }] },
             "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
             "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
             "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
@@ -113,7 +113,7 @@ app.get('/api/notion', async (req, res) => {
             const props = page.properties;
             return {
                 id: page.id,
-                title: props['標題']?.title[0]?.plain_text || '未命名', // ✅ 這裡改成 "標題" 了
+                title: props['Name']?.title[0]?.plain_text || '未命名', // 
                 category: props['分類']?.select?.name || '未分類',
                 region: props['主要地區']?.select?.name || '',
                 subRegion: props['細分地區/地點']?.rich_text[0]?.plain_text || '',
