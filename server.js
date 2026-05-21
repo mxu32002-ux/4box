@@ -28,7 +28,7 @@ app.post('/api/add-note', async (req, res) => {
         
         // 🎯 1. 核心包裹：只放文字類型的欄位 (文字可以接受空陣列 [])
         const properties = {
-            "名稱": { title: [{ text: { content: name || "未命名隨手記" } }] },
+            "Name": { title: [{ text: { content: name || "未命名隨手記" } }] },
             "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
             "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
             "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
@@ -66,7 +66,7 @@ app.post('/api/notion-update/:id', async (req, res) => {
 
         // 🎯 1. 核心包裹：文字陣列 (rich_text) 給空陣列 [] 就能清空
         const properties = {
-            "名稱": { title: [{ text: { content: name || "未命名隨手記" } }] },
+            "Name": { title: [{ text: { content: name || "未命名隨手記" } }] },
             "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
             "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
             "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
@@ -112,7 +112,7 @@ app.get('/api/notion', async (req, res) => {
             const props = page.properties;
             return {
                 id: page.id,
-                title: props['名稱']?.title[0]?.plain_text || '未命名',
+                title: props['Name']?.title[0]?.plain_text || '未命名',
                 category: props['分類']?.select?.name || '未分類',
                 region: props['主要地區']?.select?.name || '',
                 subRegion: props['細分地區/地點']?.rich_text[0]?.plain_text || '',
