@@ -606,11 +606,27 @@ let currentSort = 'newest'; // 預設：最新最前 'newest'
 // ==========================================================
 // 🚀 核心大腦：去 Render 幫 items 變數注入 Notion 活資料
 // ==========================================================
+// ==========================================================
+// ☁️ 雲端資料同步 (包含 Render 喚醒與自動重試機制)
+// ==========================================================
+let fetchRetryCount = 0; // 記錄重試次數
+
 async function loadNotionCloudData() {
     try {
-        console.log("🎬 開始與 Notion 雲端同步下載...");
+        console.log(`🎬 開始與 Notion 雲端同步下載... (第 ${fetchRetryCount + 1} 次嘗試)`);
         
+        // 第一次載入時，如果畫面有提醒框可以叫出來
+        if (fetchRetryCount === 0 && typeof showToast === 'function') {
+            showToast('📡 正在連線雲端手帳本...');
+        }
+
         const response = await fetch('https://fourbox.onrender.com/api/notion');
+        
+        // 檢查伺服器是不是還在睡覺 (502, 503 等狀態碼)
+        if (!response.ok) {
+            throw new Error(`伺服器尚未準備好 (狀態碼: ${response.status})`);
+        }
+
         const result = await response.json();
         
         if (result.success && result.data) {
@@ -619,7 +635,7 @@ async function loadNotionCloudData() {
             // 🎯 【過濾網】只要不是已刪除的卡片就放行
             const activeData = result.data.filter(item => item.status !== 'deleted');
 
-            // 2. 將雲端的標準欄位，精準分發給網頁的四大分類變數
+            // 2. 將雲端的標準欄位，精準分發給網頁的四大分類變數 (保留你原本的心血！)
             items = activeData.map(item => {
                 return {
                     id: item.id,
@@ -627,13 +643,13 @@ async function loadNotionCloudData() {
                     category: item.category === '未分類' ? '展覽' : item.category, 
                     status: item.status || 'normal', 
                     
-                    // 📅 讓獨立的日期欄位完美各就各位
+                    // 📅 獨立的日期欄位
                     startDate: item.startDate || '',
                     endDate: item.endDate || '',
                     
                     // 🎯 展覽類別變數
                     exhibitionRegion: item.region, 
-                    exhibitionLocation: item.subRegion, // 👈 對齊雲端的細分地區/地點
+                    exhibitionLocation: item.subRegion, 
                     exhibitionAddress: item.address, 
                     exhibitionTime: item.time || '未註記', 
                     exhibitionTicket: item.ticket, 
@@ -650,7 +666,7 @@ async function loadNotionCloudData() {
                     attractionNotes: item.notes,
                     
                     // 🎯 美食類別變數
-                    foodType: '日式', // 如果雲端有延伸欄位可再擴充
+                    foodType: '日式', 
                     foodRegion: item.region, 
                     foodRegionSub: item.subRegion,
                     foodAddress: item.address, 
@@ -672,16 +688,39 @@ async function loadNotionCloudData() {
                 };
             });
 
-            // 清空本地舊快取，全面迎接雲端最新正本資料
+            // 清空本地舊快取
             localStorage.clear();
 
             if (typeof renderItems === 'function') {
                 renderItems(); 
                 console.log("🎉 雲端最新資料已完美下載並渲染成功！");
+                
+                if (fetchRetryCount > 0 && typeof showToast === 'function') {
+                    showToast('✨ 伺服器已喚醒，資料同步完成！');
+                }
             }
+            
+            fetchRetryCount = 0; // 成功後歸零
         }
     } catch (error) {
-        console.error("❌ 前端讀取雲端發生錯誤:", error);
+        console.warn("⚠️ 前端讀取雲端發生錯誤 (伺服器可能休眠中):", error);
+        
+        // ✨ 自動喚醒機制：最多重試 10 次 (約 35 秒)
+        if (fetchRetryCount < 10) {
+            fetchRetryCount++;
+            
+            if (typeof showToast === 'function') {
+                showToast(`⏳ 伺服器暖機中... 自動重試 (${fetchRetryCount}/10)`);
+            }
+            
+            // 停頓 3.5 秒後，再次敲門
+            setTimeout(loadNotionCloudData, 3500);
+        } else {
+            if (typeof showToast === 'function') {
+                showToast('❌ 伺服器喚醒失敗，請稍後再試');
+            }
+            fetchRetryCount = 0;
+        }
     }
 }
 // ==========================================================
