@@ -635,7 +635,7 @@ async function loadNotionCloudData() {
             // 🎯 【過濾網】只要不是已刪除的卡片就放行
             const activeData = result.data.filter(item => item.status !== 'deleted');
 
-            // 2. 將雲端的標準欄位，精準分發給網頁的四大分類變數 (保留你原本的心血！)
+            // 2. 將雲端的標準欄位，精準分發給網頁的四大分類變數
             items = activeData.map(item => {
                 return {
                     id: item.id,
@@ -666,7 +666,7 @@ async function loadNotionCloudData() {
                     attractionNotes: item.notes,
                     
                     // 🎯 美食類別變數
-                    foodType: '日式', 
+                    foodType: item.foodType || '日式',  // ✅ 這裡修正了！有資料就用資料，沒資料才預設日式
                     foodRegion: item.region, 
                     foodRegionSub: item.subRegion,
                     foodAddress: item.address, 
