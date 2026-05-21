@@ -26,9 +26,9 @@ app.post('/api/add-note', async (req, res) => {
     try {
         const { name, category, mainRegion, subRegion, address, openTime, offDay, ticketInfo, foodType, startDate, endDate, videoUrl, note } = req.body;
         
-        // 🎯 1. 核心包裹：只放文字類型的欄位 (文字可以接受空陣列 [])
+        // 🎯 1. 核心包裹：注意！這裡已經改成 "標題"
         const properties = {
-            "Name": { title: [{ text: { content: name || "未命名隨手記" } }] },
+            "標題": { title: [{ text: { content: name || "未命名隨手記" } }] },
             "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
             "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
             "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
@@ -37,7 +37,7 @@ app.post('/api/add-note', async (req, res) => {
             "隨手札記備註": { rich_text: note ? [{ text: { content: note } }] : [] }
         };
 
-        // 🛡️ 2. 危險包裹防禦：Select、Date、URL 這些如果沒填，我們「絕對不加進包裹裡」，連 null 都不給！
+        // 🛡️ 2. 危險包裹防禦
         if (category && category.trim() !== '') properties["分類"] = { select: { name: category } };
         if (mainRegion && mainRegion.trim() !== '') properties["主要地區"] = { select: { name: mainRegion } };
         if (foodType && foodType.trim() !== '') properties["美食種類"] = { select: { name: foodType } };
@@ -52,7 +52,7 @@ app.post('/api/add-note', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-// ==========================================================
+
 // ==========================================================
 // 🔄 更新 Notion 舊資料 (Notion Update)
 // ==========================================================
@@ -64,9 +64,9 @@ app.post('/api/notion-update/:id', async (req, res) => {
         const { id } = req.params;
         const { name, category, mainRegion, subRegion, address, openTime, offDay, ticketInfo, foodType, startDate, endDate, videoUrl, note } = req.body;
 
-        // 🎯 1. 核心包裹：文字陣列 (rich_text) 給空陣列 [] 就能清空
+        // 🎯 1. 核心包裹：注意！這裡已經改成 "標題"
         const properties = {
-            "Name": { title: [{ text: { content: name || "未命名隨手記" } }] },
+            "標題": { title: [{ text: { content: name || "未命名隨手記" } }] },
             "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
             "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
             "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
@@ -75,21 +75,21 @@ app.post('/api/notion-update/:id', async (req, res) => {
             "隨手札記備註": { rich_text: note ? [{ text: { content: note } }] : [] }
         };
 
-        // 🛡️ 2. 危險欄位防禦：如果沒值，就直接給純粹的 null (直接清空)
+        // 🛡️ 2. 危險欄位防禦：正確清空寫法
         properties["分類"] = category ? { select: { name: category } } : null;
         properties["主要地區"] = mainRegion ? { select: { name: mainRegion } } : null;
 
         if (foodType && foodType.trim() !== '') properties["美食種類"] = { select: { name: foodType } };
-        else properties["美食種類"] = null; // ✅ 正確清空寫法
+        else properties["美食種類"] = null;
 
         if (videoUrl && videoUrl.trim() !== '') properties["影片連結"] = { url: videoUrl };
-        else properties["影片連結"] = null; // ✅ 正確清空寫法
+        else properties["影片連結"] = null; 
 
         if (startDate && startDate.trim() !== '') properties["開始日期"] = { date: { start: startDate } };
-        else properties["開始日期"] = null; // ✅ 正確清空寫法
+        else properties["開始日期"] = null; 
 
         if (endDate && endDate.trim() !== '') properties["結束日期"] = { date: { start: endDate } };
-        else properties["結束日期"] = null; // ✅ 正確清空寫法
+        else properties["結束日期"] = null; 
 
         await notion.pages.update({ page_id: id, properties: properties });
         res.json({ success: true, message: '雲端手帳更新成功！' });
@@ -98,6 +98,7 @@ app.post('/api/notion-update/:id', async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 });
+
 // ==========================================================
 // 📋 讀取所有資料
 // ==========================================================
@@ -112,7 +113,7 @@ app.get('/api/notion', async (req, res) => {
             const props = page.properties;
             return {
                 id: page.id,
-                title: props['Name']?.title[0]?.plain_text || '未命名',
+                title: props['標題']?.title[0]?.plain_text || '未命名', // ✅ 這裡改成 "標題" 了
                 category: props['分類']?.select?.name || '未分類',
                 region: props['主要地區']?.select?.name || '',
                 subRegion: props['細分地區/地點']?.rich_text[0]?.plain_text || '',
@@ -124,7 +125,10 @@ app.get('/api/notion', async (req, res) => {
                 startDate: props['開始日期']?.date?.start || '',
                 endDate: props['結束日期']?.date?.start || '',
                 videoUrl: props['影片連結']?.url || '',
-                status: props['status']?.select?.name || 'normal'
+                status: props['status']?.select?.name || 'normal',
+                
+                // 🎯 【關鍵修復】加上這行，美食種類才不會一直跳回日式！
+                foodType: props['美食種類']?.select?.name || ''
             };
         });
         res.json({ success: true, data: items });
