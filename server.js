@@ -53,9 +53,6 @@ app.post('/api/add-note', async (req, res) => {
     }
 });
 
-// ==========================================================
-// 🔄 更新 Notion 舊資料 (Notion Update)
-// ==========================================================
 app.post('/api/notion-update/:id', async (req, res) => {
     const databaseId = process.env.NOTION_DATABASE_ID;
     if (!databaseId) return res.status(500).json({ success: false, error: '尚未設定 DATABASE_ID' });
@@ -64,34 +61,32 @@ app.post('/api/notion-update/:id', async (req, res) => {
         const { id } = req.params;
         const { name, category, mainRegion, subRegion, address, openTime, offDay, ticketInfo, foodType, startDate, endDate, videoUrl, note } = req.body;
 
-        // 🎯 1. 核心包裹
-        const properties = {
-            "Name": { title: [{ text: { content: name || "未命名隨手記" } }] },
-            "細分地區/地點": { rich_text: subRegion ? [{ text: { content: subRegion } }] : [] },
-            "詳細地址": { rich_text: address ? [{ text: { content: address } }] : [] },
-            "營業/開放時間": { rich_text: openTime ? [{ text: { content: openTime } }] : [] },
-            "固定公休日": { rich_text: offDay ? [{ text: { content: offDay } }] : [] },
-            "門票/票券資訊": { rich_text: ticketInfo ? [{ text: { content: ticketInfo } }] : [] },
-            "隨手札記備註": { rich_text: note ? [{ text: { content: note } }] : [] }
-        };
+        // 1. 初始化一個空的 properties 物件
+        const properties = {};
 
-        // 🛡️ 2. 危險欄位防禦：正確清空寫法
-        properties["分類"] = category ? { select: { name: category } } : null;
-        properties["主要地區"] = mainRegion ? { select: { name: mainRegion } } : null;
+        // 2. 只有有值時才寫入，不要傳 null
+        properties["Name"] = { title: [{ text: { content: name || "未命名隨手記" } }] };
+        
+        if (subRegion) properties["細分地區/地點"] = { rich_text: [{ text: { content: subRegion } }] };
+        if (address) properties["詳細地址"] = { rich_text: [{ text: { content: address } }] };
+        if (openTime) properties["營業/開放時間"] = { rich_text: [{ text: { content: openTime } }] };
+        if (offDay) properties["固定公休日"] = { rich_text: [{ text: { content: offDay } }] };
+        if (ticketInfo) properties["門票/票券資訊"] = { rich_text: [{ text: { content: ticketInfo } }] };
+        if (note) properties["隨手札記備註"] = { rich_text: [{ text: { content: note } }] };
 
+        // 3. 處理 Select 欄位 (一定要確認 Notion 裡真的叫這些名字)
+        if (category) properties["分類"] = { select: { name: category } };
+        if (mainRegion) properties["主要地區"] = { select: { name: mainRegion } };
         if (foodType && foodType.trim() !== '') properties["美食種類"] = { select: { name: foodType } };
-        else properties["美食種類"] = null;
 
+        // 4. 處理特殊欄位 (日期與連結)
         if (videoUrl && videoUrl.trim() !== '') properties["影片連結"] = { url: videoUrl };
-        else properties["影片連結"] = null; 
-
         if (startDate && startDate.trim() !== '') properties["開始日期"] = { date: { start: startDate } };
-        else properties["開始日期"] = null; 
-
         if (endDate && endDate.trim() !== '') properties["結束日期"] = { date: { start: endDate } };
-        else properties["結束日期"] = null; 
 
+        // 5. 發送更新
         await notion.pages.update({ page_id: id, properties: properties });
+        
         res.json({ success: true, message: '雲端手帳更新成功！' });
     } catch (error) {
         console.error("❌ Notion 更新失敗:", error);
